@@ -145,6 +145,10 @@ public class Evaluator(Node ast)
                 }
                 else if (Parser.cDN.Any(c => c.Identifier == identifierNode.Identifier))
                 {
+                    if (Parser.cDN.First(c => c.Identifier == identifierNode.Identifier).Value is ValueNode vnc)
+                    {
+                        return vnc.Value;
+                    }
                     return Parser.cDN.First(c => c.Identifier == identifierNode.Identifier).Value;
                 }
                 else

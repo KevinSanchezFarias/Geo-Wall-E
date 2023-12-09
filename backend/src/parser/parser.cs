@@ -7,10 +7,10 @@ public class Parser(List<Token> tokens)
     private static List<FunctionDeclarationNode> fDN = [];
     public static readonly List<ConstDeclarationNode> cDN =
     [
-        new ConstDeclarationNode("PI", new ValueNode(3.14159)),
-        new ConstDeclarationNode("E", new ValueNode(2.71828)),
+        new ConstDeclarationNode("PI", new ValueNode(Math.PI)),
+        new ConstDeclarationNode("E", new ValueNode(Math.E)),
         new ConstDeclarationNode("G", new ValueNode(6.67430)),
-        new ConstDeclarationNode("C", new ValueNode(299792458)),
+        new ConstDeclarationNode("C", new ValueNode(299792458.0)),
         new ConstDeclarationNode("GAMMA", new ValueNode(0.57721566490153286060651209008240243104215933593992)),
         new ConstDeclarationNode("PHI", new ValueNode(1.61803398874989484820458683436563811772030917980576)),
         new ConstDeclarationNode("K", new ValueNode(1.380649e-23)),

@@ -1,7 +1,7 @@
 using LexerAnalize;
 using ParserAnalize;
 using EvaluatorAnalize;
-using System.Text;
+
 namespace InterpreterAnalizer;
 public class Interpreter
 {
@@ -12,11 +12,17 @@ public class Interpreter
 
         foreach (var line in lines)
         {
-            var lexer = new Lexer(line);
-            var parser = new Parser(lexer.LexTokens);
-            var evaluator = new Evaluator(parser.Parse());
-            var lineResult = evaluator.Evaluate();
-            return lineResult.ToString()!;
+            try
+            {
+                var lexer = new Lexer(line);
+                var parser = new Parser(lexer.LexTokens);
+                var evaluator = new Evaluator(parser.Parse());
+                var lineResult = evaluator.Evaluate();
+
+                if (lineResult == null) { return ""; }
+                else return lineResult.ToString()!;
+            }
+            catch (Exception e) { return e.Message; }
         }
         return "";
     }
