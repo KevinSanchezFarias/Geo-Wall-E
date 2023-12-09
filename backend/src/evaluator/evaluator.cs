@@ -4,31 +4,7 @@ using ParserAnalize;
 namespace EvaluatorAnalize;
 public class Evaluator(Node ast)
 {
-    public static readonly Dictionary<string, Func<double[], double>> predefinedFunctions = new()
-    {
-        { "Sin", args => Math.Sin(args[0]) },
-        { "Cos", args => Math.Cos(args[0]) },
-        { "Tan", args => Math.Tan(args[0]) },
-        { "Sqrt", args => Math.Sqrt(args[0]) },
-        { "Pow", args => Math.Pow(args[0], args[1]) },
-        { "Abs", args => Math.Abs(args[0]) },
-        { "Floor", args => Math.Floor(args[0]) },
-        { "Ceiling", args => Math.Ceiling(args[0]) },
-        { "Round", args => Math.Round(args[0]) },
-        { "Truncate", args => Math.Truncate(args[0]) },
-        { "Log", args => args.Length == 1 ? Math.Log(args[0]) : Math.Log(args[0], args[1]) },
-        { "Log10", args => Math.Log10(args[0]) },
-        { "Exp", args => Math.Exp(args[0]) },
-        { "Min", args => args.Min() },
-        { "Max", args => args.Max() },
-        { "Sum", args => args.Sum() },
-        { "Average", args => args.Average() },
-        { "Median", args => args.OrderBy(x => x).ElementAt(args.Length / 2) },
-        { "Mode", args => args.GroupBy(x => x).OrderByDescending(x => x.Count()).First().Key },
-        { "Range", args => args.Max() - args.Min() },
-        { "Fact", args => Enumerable.Range(1, (int)args[0]).Aggregate(1, (p, item) => p * item) },
-        { "Rand", args => new Random().NextDouble() * (args.Length == 1 ? args[0] : args[1] - args[0]) + (args.Length == 1 ? 0 : args[0]) }
-    };
+
     private Node AST { get; set; } = ast;
     private Dictionary<string, object> variables = [];
 
@@ -73,7 +49,7 @@ public class Evaluator(Node ast)
 
                 return result;
             case FunctionPredefinedNode functionPredefinedNode:
-                if (predefinedFunctions.TryGetValue(functionPredefinedNode.Name, out var function))
+                if (LE.predefinedFunctions.TryGetValue(functionPredefinedNode.Name, out var function))
                 {
                     var argValues = functionPredefinedNode.Args.Select(arg => (double)Visit(arg)).ToArray();
                     return function(argValues);
@@ -143,13 +119,13 @@ public class Evaluator(Node ast)
                 {
                     return value;
                 }
-                else if (Parser.cDN.Any(c => c.Identifier == identifierNode.Identifier))
+                else if (LE.cDN.Any(c => c.Identifier == identifierNode.Identifier))
                 {
-                    if (Parser.cDN.First(c => c.Identifier == identifierNode.Identifier).Value is ValueNode vnc)
+                    if (LE.cDN.First(c => c.Identifier == identifierNode.Identifier).Value is ValueNode vnc)
                     {
                         return vnc.Value;
                     }
-                    return Parser.cDN.First(c => c.Identifier == identifierNode.Identifier).Value;
+                    return LE.cDN.First(c => c.Identifier == identifierNode.Identifier).Value;
                 }
                 else
                 {

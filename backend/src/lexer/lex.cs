@@ -124,6 +124,11 @@ public partial class Lexer
         }
         return result switch
         {
+            "point" => new Token(TokenType.Point, result, Line, Column),
+            "line" => new Token(TokenType.Line, result, Line, Column),
+            "circle" => new Token(TokenType.Circle, result, Line, Column),
+            "arc" => new Token(TokenType.Arc, result, Line, Column),
+            "color" => new Token(TokenType.Color, result, Line, Column),
             "const" => new Token(TokenType.Const, result, Line, Column),
             "flinq" => new Token(TokenType.Flinq, result, Line, Column),
             "llinq" => new Token(TokenType.LLinq, result, Line, Column),

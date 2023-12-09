@@ -5,21 +5,7 @@ namespace ParserAnalize;
 public class Parser(List<Token> tokens)
 {
     private static List<FunctionDeclarationNode> fDN = [];
-    public static readonly List<ConstDeclarationNode> cDN =
-    [
-        new ConstDeclarationNode("PI", new ValueNode(Math.PI)),
-        new ConstDeclarationNode("E", new ValueNode(Math.E)),
-        new ConstDeclarationNode("G", new ValueNode(6.67430)),
-        new ConstDeclarationNode("C", new ValueNode(299792458.0)),
-        new ConstDeclarationNode("GAMMA", new ValueNode(0.57721566490153286060651209008240243104215933593992)),
-        new ConstDeclarationNode("PHI", new ValueNode(1.61803398874989484820458683436563811772030917980576)),
-        new ConstDeclarationNode("K", new ValueNode(1.380649e-23)),
-        new ConstDeclarationNode("NA", new ValueNode(6.02214076e23)),
-        new ConstDeclarationNode("R", new ValueNode(8.31446261815324)),
-        new ConstDeclarationNode("SIGMA", new ValueNode(5.670374419e-8)),
-        new ConstDeclarationNode("GOLDENRATIO", new ValueNode(1.61803398874989484820458683436563811772030917980576)),
-        new ConstDeclarationNode("AVOGADRO", new ValueNode(6.02214076e23)),
-    ];
+
     private List<Token> Tokens { get; set; } = tokens;
     private int currentTokenIndex = 0;
 
@@ -149,7 +135,7 @@ public class Parser(List<Token> tokens)
                 }
                 _ = ConsumeToken(TokenType.RParen);
                 // Check if the function name is in the list of predefined functions
-                if (EvaluatorAnalize.Evaluator.predefinedFunctions.ContainsKey(token.Value))
+                if (LE.predefinedFunctions.ContainsKey(token.Value))
                 {
                     return new FunctionPredefinedNode(token.Value, args);
                 }
@@ -231,10 +217,8 @@ public class Parser(List<Token> tokens)
     {
         get
         {
-            var left = ParseExpression();
-            var operatorToken = ConsumeToken(TokenType.Point);
-            var right = ParseExpression();
-            return new BinaryExpressionNode(left, operatorToken.Value, right);
+
+            return null!;
         }
     }
 
@@ -302,7 +286,7 @@ public class Parser(List<Token> tokens)
             _ = ConsumeToken(TokenType.Operator);
             var valueNode = ParseExpression();
 
-            cDN.Insert(0, new ConstDeclarationNode(name.Value, valueNode)); // Store the valueNode at the beginning of the list
+            LE.cDN.Insert(0, new ConstDeclarationNode(name.Value, valueNode)); // Store the valueNode at the beginning of the list
             return new EndNode();
         }
     }

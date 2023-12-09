@@ -27,7 +27,11 @@ public enum TokenType
     InKeyword,
     FunctionKeyword,
     EOL,
-    EOF
+    EOF,
+    Line,
+    Circle,
+    Arc,
+    Color
 }
 /// <summary>
 /// Represents a token in the program.

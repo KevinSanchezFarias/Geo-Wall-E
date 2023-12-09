@@ -51,6 +51,10 @@ public class FunctionDeclarationNode(string name, List<string> args, Node body) 
     public List<string> Args { get; } = args;
     public Node Body { get; } = body;
 }
+public class PointNode(string name) : Node
+{
+    public string Name { get; } = name;
+}
 public class EndNode : Node { }
 
 public class ValueNode(object value) : Node
