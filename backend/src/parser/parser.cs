@@ -13,14 +13,9 @@ public class Parser(List<Token> tokens)
 
     private Token ConsumeToken(TokenType type)
     {
-        if (CurrentToken?.Type == type)
-        {
-            return Tokens[currentTokenIndex++];
-        }
-        else
-        {
-            throw new Exception($"Expected token {type}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
-        }
+        return CurrentToken?.Type == type
+            ? Tokens[currentTokenIndex++]
+            : throw new Exception($"Expected token {type}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
     }
     public Node Parse()
     {
@@ -140,13 +135,11 @@ public class Parser(List<Token> tokens)
                     return new FunctionPredefinedNode(token.Value, args);
                 }
                 // Check if the function name is in the list of declared functions
-                else if (fDN.Any(f => f.Name == token.Value))
-                {
-                    return new FunctionCallNode(token.Value, args);
-                }
                 else
                 {
-                    throw new Exception($"Undefined function {token.Value}");
+                    return fDN.Any(f => f.Name == token.Value)
+                        ? (Node)new FunctionCallNode(token.Value, args)
+                        : throw new Exception($"Undefined function {token.Value}");
                 }
             }
             else
@@ -160,14 +153,7 @@ public class Parser(List<Token> tokens)
     {
         _ = ConsumeToken(TokenType.LetKeyword);
 
-        if (CurrentToken?.Type == TokenType.LLinq)
-        {
-            return ParseMultipleVariableDeclaration;
-        }
-        else
-        {
-            return ParseSingleVariableDeclaration;
-        }
+        return CurrentToken?.Type == TokenType.LLinq ? ParseMultipleVariableDeclaration : ParseSingleVariableDeclaration;
     }
 
     private Node ParseSingleVariableDeclaration

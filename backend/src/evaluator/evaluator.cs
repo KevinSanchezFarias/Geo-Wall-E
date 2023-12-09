@@ -59,56 +59,12 @@ public class Evaluator(Node ast)
                     throw new Exception($"Undefined function {functionPredefinedNode.Name}");
                 }
             case BinaryExpressionNode binaryExpressionNode:
-                var left = Visit(binaryExpressionNode.Left);
-                if (left is ValueNode vn) left = vn.Value;
-                var right = Visit(binaryExpressionNode.Right);
-                if (right is ValueNode vn2) right = vn2.Value;
-                if (binaryExpressionNode.Operator == "+" && left is string leftStr && right is string rightStr)
-                {
-                    return leftStr + rightStr;
-                }
-                else if (binaryExpressionNode.Operator == "==" && left is string leftStr2 && right is string rightStr2)
-                {
-                    return leftStr2 == rightStr2;
-                }
-                else if (binaryExpressionNode.Operator == "!=" && left is string leftStr3 && right is string rightStr3)
-                {
-                    return leftStr3 != rightStr3;
-                }
-                else if (left is double leftNum && right is double rightNum)
-                {
-                    return binaryExpressionNode.Operator switch
-                    {
-                        "+" => leftNum + rightNum,
-                        "-" => leftNum - rightNum,
-                        "*" => leftNum * rightNum,
-                        "/" => leftNum / rightNum,
-                        "^" => Math.Pow(leftNum, rightNum),
-                        "<" => leftNum < rightNum,
-                        ">" => leftNum > rightNum,
-                        "<=" => leftNum <= rightNum,
-                        ">=" => leftNum >= rightNum,
-                        "==" => leftNum == rightNum,
-                        "!=" => leftNum != rightNum,
-                        _ => throw new Exception($"Unexpected operator {binaryExpressionNode.Operator}")
-                    };
-                }
-                else
-                {
-                    throw new Exception($"Invalid operands for operator {binaryExpressionNode.Operator}");
-                }
+                return BinaryHandler(binaryExpressionNode);
             case IfExpressionNode ifExpressionNode:
                 var condition = Visit(ifExpressionNode.Condition);
                 if (condition is bool conditionBool)
                 {
-                    if (conditionBool)
-                    {
-                        return Visit(ifExpressionNode.ThenBody);
-                    }
-                    else
-                    {
-                        return Visit(ifExpressionNode.ElseBody);
-                    }
+                    return conditionBool ? Visit(ifExpressionNode.ThenBody) : Visit(ifExpressionNode.ElseBody);
                 }
                 else
                 {
@@ -121,11 +77,9 @@ public class Evaluator(Node ast)
                 }
                 else if (LE.cDN.Any(c => c.Identifier == identifierNode.Identifier))
                 {
-                    if (LE.cDN.First(c => c.Identifier == identifierNode.Identifier).Value is ValueNode vnc)
-                    {
-                        return vnc.Value;
-                    }
-                    return LE.cDN.First(c => c.Identifier == identifierNode.Identifier).Value;
+                    return LE.cDN.First(c => c.Identifier == identifierNode.Identifier).Value is ValueNode vnc
+                        ? vnc.Value
+                        : LE.cDN.First(c => c.Identifier == identifierNode.Identifier).Value;
                 }
                 else
                 {
@@ -142,6 +96,44 @@ public class Evaluator(Node ast)
                 return Visit(multipleVarDecl.Body);
             default:
                 throw new Exception($"Unexpected node type {node.GetType()}");
+        }
+
+        object BinaryHandler(BinaryExpressionNode binaryExpressionNode)
+        {
+            var left = Visit(binaryExpressionNode.Left);
+            if (left is ValueNode vn) left = vn.Value;
+            var right = Visit(binaryExpressionNode.Right);
+            if (right is ValueNode vn2) right = vn2.Value;
+            if (binaryExpressionNode.Operator == "+" && left is string leftStr && right is string rightStr)
+            {
+                return leftStr + rightStr;
+            }
+            else if (binaryExpressionNode.Operator == "==" && left is string leftStr2 && right is string rightStr2)
+            {
+                return leftStr2 == rightStr2;
+            }
+            else
+            {
+                return binaryExpressionNode.Operator == "!=" && left is string leftStr3 && right is string rightStr3
+                    ? leftStr3 != rightStr3
+                    : left is double leftNum && right is double rightNum
+                                    ? binaryExpressionNode.Operator switch
+                                    {
+                                        "+" => leftNum + rightNum,
+                                        "-" => leftNum - rightNum,
+                                        "*" => leftNum * rightNum,
+                                        "/" => leftNum / rightNum,
+                                        "^" => Math.Pow(leftNum, rightNum),
+                                        "<" => leftNum < rightNum,
+                                        ">" => leftNum > rightNum,
+                                        "<=" => leftNum <= rightNum,
+                                        ">=" => leftNum >= rightNum,
+                                        "==" => leftNum == rightNum,
+                                        "!=" => leftNum != rightNum,
+                                        _ => throw new Exception($"Unexpected operator {binaryExpressionNode.Operator}")
+                                    }
+                                    : throw new Exception($"Invalid operands for operator {binaryExpressionNode.Operator}");
+            }
         }
     }
 }

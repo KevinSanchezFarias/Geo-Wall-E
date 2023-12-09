@@ -174,14 +174,7 @@ public partial class Lexer
     public char Peek()
     {
         var peek_pos = Position + 1;
-        if (peek_pos >= Text.Length)
-        {
-            return '\0';
-        }
-        else
-        {
-            return Text[peek_pos];
-        }
+        return peek_pos >= Text.Length ? '\0' : Text[peek_pos];
     }
     /// <summary>
     /// Function that trash one token
