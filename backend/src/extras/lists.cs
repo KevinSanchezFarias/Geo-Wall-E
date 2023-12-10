@@ -5,6 +5,13 @@ namespace Lists
 {
     public static class LE
     {
+        private static string color = "default";
+        public static readonly List<PointNode> poiND = [];
+        public static readonly List<CircleNode> cirND = [];
+        public static readonly List<LineNode> linND = [];
+        public static readonly List<SegmentNode> segND = [];
+        public static readonly List<RayNode> rayND = [];
+
         public static readonly Dictionary<string, Func<double[], double>> predefinedFunctions = new()
     {
         { "Sin", args => Math.Sin(args[0]) },
@@ -32,7 +39,7 @@ namespace Lists
     };
         public static readonly List<ConstDeclarationNode> cDN =
         [
-            new ConstDeclarationNode("PI", new ValueNode(Math.PI)),
+        new ConstDeclarationNode("PI", new ValueNode(Math.PI)),
         new ConstDeclarationNode("E", new ValueNode(Math.E)),
         new ConstDeclarationNode("G", new ValueNode(6.67430)),
         new ConstDeclarationNode("C", new ValueNode(299792458.0)),
@@ -45,5 +52,7 @@ namespace Lists
         new ConstDeclarationNode("GOLDENRATIO", new ValueNode(1.61803398874989484820458683436563811772030917980576)),
         new ConstDeclarationNode("AVOGADRO", new ValueNode(6.02214076e23)),
     ];
+
+        public static string Color { get => color; set => color = value; }
     }
 }

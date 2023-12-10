@@ -10,6 +10,7 @@ public class Interpreter
         // Split the string into lines
         var lines = input.Split(";\r", StringSplitOptions.RemoveEmptyEntries);
 
+        var lineResult = default(object);
         foreach (var line in lines)
         {
             try
@@ -17,12 +18,11 @@ public class Interpreter
                 var lexer = new Lexer(line);
                 var parser = new Parser(lexer.LexTokens);
                 var evaluator = new Evaluator(parser.Parse());
-                var lineResult = evaluator.Evaluate();
+                lineResult = evaluator.Evaluate();
 
-                return lineResult == null ? "" : lineResult.ToString();
             }
             catch (Exception e) { return e.Message; }
         }
-        return "";
+        return lineResult == null ? "" : lineResult.ToString();
     }
 }

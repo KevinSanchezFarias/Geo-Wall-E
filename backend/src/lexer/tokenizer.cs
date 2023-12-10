@@ -40,7 +40,7 @@ public partial class Lexer
                     LexTokens.Add(new Token(TokenType.Operator, "*", Line, Column));
                     break;
                 case '/':
-                    if (Peek() == '/') { Advance(); LexComment(); continue; }
+                    if (Peek() == '/') { Advance(); LexComment(); break; }
                     else
                     {
                         Advance();

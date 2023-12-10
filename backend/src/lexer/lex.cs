@@ -4,7 +4,6 @@ namespace LexerAnalize;
 public partial class Lexer
 {
     private string Text { get; set; }
-    private List<Token> RTokens { get; set; }
     private static int Position { get; set; }
     private int Column { get; set; }
     private int Line { get; set; }
@@ -13,7 +12,6 @@ public partial class Lexer
     public Lexer(string input)
     {
         Text = input;
-        RTokens = [];
         Position = 0;
         Column = 1;
         Line = 1;
@@ -125,10 +123,13 @@ public partial class Lexer
         return result switch
         {
             "point" => new Token(TokenType.Point, result, Line, Column),
-            "line" => new Token(TokenType.Line, result, Line, Column),
-            "circle" => new Token(TokenType.Circle, result, Line, Column),
-            "arc" => new Token(TokenType.Arc, result, Line, Column),
+            "line" => new Token(TokenType.Figure, result, Line, Column),
+            "segment" => new Token(TokenType.Figure, result, Line, Column),
+            "ray" => new Token(TokenType.Figure, result, Line, Column),
+            "circle" => new Token(TokenType.Figure, result, Line, Column),
+            "arc" => new Token(TokenType.Figure, result, Line, Column),
             "color" => new Token(TokenType.Color, result, Line, Column),
+            "restore" => new Token(TokenType.Restore, result, Line, Column),
             "const" => new Token(TokenType.Const, result, Line, Column),
             "flinq" => new Token(TokenType.Flinq, result, Line, Column),
             "llinq" => new Token(TokenType.LLinq, result, Line, Column),
@@ -175,13 +176,5 @@ public partial class Lexer
     {
         var peek_pos = Position + 1;
         return peek_pos >= Text.Length ? '\0' : Text[peek_pos];
-    }
-    /// <summary>
-    /// Function that trash one token
-    /// </summary>
-    /// <returns>None</returns>
-    public void UngetToken(Token token)
-    {
-        RTokens.Insert(0, token);
     }
 }

@@ -4,9 +4,9 @@ using Nodes;
 namespace ParserAnalize;
 public class Parser(List<Token> tokens)
 {
-    private static List<FunctionDeclarationNode> fDN = [];
-
     private List<Token> Tokens { get; set; } = tokens;
+    public static List<FunctionDeclarationNode> FDN { get => fDN; set => fDN = value; }
+    private static List<FunctionDeclarationNode> fDN = [];
     private int currentTokenIndex = 0;
 
     private Token? CurrentToken => currentTokenIndex < Tokens.Count ? Tokens[currentTokenIndex] : null;
@@ -87,7 +87,10 @@ public class Parser(List<Token> tokens)
         {
             return (CurrentToken?.Type) switch
             {
+                TokenType.Figure => ParseFigure(),
                 TokenType.FunctionKeyword => ParseFunctionDeclaration,
+                TokenType.Color => ParseColor,
+                TokenType.Restore => ParseRestore,
                 TokenType.Const => ParseConstDeclaration,
                 TokenType.LetKeyword => ParseVariableDeclaration(),
                 TokenType.Point => ParsePointExpression,
@@ -99,6 +102,59 @@ public class Parser(List<Token> tokens)
             };
         }
     }
+
+    private Node ParseFigure()
+    {
+        var type = CurrentToken?.Value;
+        return type switch
+        {
+            "line" => ParseLine,
+            "segment" => ParseSegment(),
+            "ray" => ParseRay(),
+            "circle" => ParseCircle(),
+            "arc" => ParseArc(),
+            _ => throw new Exception($"It's not a figure {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}. How do you even get here?"),
+        };
+    }
+
+    private Node ParseArc()
+    {
+        throw new NotImplementedException();
+    }
+
+    private Node ParseCircle()
+    {
+        throw new NotImplementedException();
+    }
+
+    private Node ParseRay()
+    {
+        throw new NotImplementedException();
+    }
+
+    private Node ParseSegment()
+    {
+        throw new NotImplementedException();
+    }
+
+    private Node ParseLine
+    {
+        get
+        {
+            // line ln (p1, p2) "It's a line!";
+            _ = ConsumeToken(TokenType.Figure);
+            var name = ConsumeToken(TokenType.Identifier);
+            _ = ConsumeToken(TokenType.LParen);
+            var p1 = ParseExpression();
+            _ = ConsumeToken(TokenType.Comma);
+            var p2 = ParseExpression();
+            _ = ConsumeToken(TokenType.RParen);
+            var comment = ParseStringLiteral;
+            LE.linND.Add(new LineNode(name.Value, A: (PointNode)p1, B: (PointNode)p2, comment));
+            return new EndNode();
+        }
+    }
+
     private Node ParseNumber
     {
         get
@@ -113,7 +169,6 @@ public class Parser(List<Token> tokens)
         get
         {
             var token = ConsumeToken(TokenType.Identifier);
-
             // If the identifier is followed by a left parenthesis, treat it as a function call
             if (CurrentToken?.Type == TokenType.LParen)
             {
@@ -137,10 +192,19 @@ public class Parser(List<Token> tokens)
                 // Check if the function name is in the list of declared functions
                 else
                 {
-                    return fDN.Any(f => f.Name == token.Value)
-                        ? (Node)new FunctionCallNode(token.Value, args)
-                        : throw new Exception($"Undefined function {token.Value}");
+                    if (FDN.Any(f => f.Name == token.Value))
+                    {
+                        return new FunctionCallNode(token.Value, args);
+                    }
+                    else
+                    {
+                        throw new Exception($"Undefined function {token.Value}");
+                    }
                 }
+            }
+            else if (LE.poiND.Any(p => p.Name == token.Value))
+            {
+                return LE.poiND.First(p => p.Name == token.Value);
             }
             else
             {
@@ -155,7 +219,6 @@ public class Parser(List<Token> tokens)
 
         return CurrentToken?.Type == TokenType.LLinq ? ParseMultipleVariableDeclaration : ParseSingleVariableDeclaration;
     }
-
     private Node ParseSingleVariableDeclaration
     {
         get
@@ -168,7 +231,6 @@ public class Parser(List<Token> tokens)
             return new VariableDeclarationNode(identifier.Value, value, body);
         }
     }
-
     private Node ParseMultipleVariableDeclaration
     {
         get
@@ -198,16 +260,20 @@ public class Parser(List<Token> tokens)
             return new MultipleVariableDeclarationNode(declarations, body);
         }
     }
-
     private Node ParsePointExpression
     {
         get
         {
+            _ = ConsumeToken(TokenType.Point);
+            var name = ConsumeToken(TokenType.Identifier);
+            var x = new Random().Next(0, 100);
+            var y = new Random().Next(0, 100);
+            LE.poiND.Add(new PointNode(name.Value, x, y));
 
-            return null!;
+            return new EndNode();
         }
-    }
 
+    }
     private Node ParseIfExpression
     {
         get
@@ -221,7 +287,6 @@ public class Parser(List<Token> tokens)
             return new IfExpressionNode(condition, thenExpression, elseExpression);
         }
     }
-
     private Node ParseCondition
     {
         get
@@ -234,7 +299,6 @@ public class Parser(List<Token> tokens)
             return new BinaryExpressionNode(left, operatorToken.Value, right);
         }
     }
-
     private Node ParseStringLiteral
     {
         get
@@ -243,7 +307,6 @@ public class Parser(List<Token> tokens)
             return new ValueNode(token.Value);
         }
     }
-
     private Node ParseFunctionDeclaration
     {
         get
@@ -262,7 +325,6 @@ public class Parser(List<Token> tokens)
             return new EndNode();
         }
     }
-
     private Node ParseConstDeclaration
     {
         get
@@ -276,5 +338,25 @@ public class Parser(List<Token> tokens)
             return new EndNode();
         }
     }
-    public static List<FunctionDeclarationNode> FDN { get => fDN; set => fDN = value; }
+
+    private Node ParseColor
+    {
+        get
+        {
+            _ = ConsumeToken(TokenType.Color);
+            var name = ConsumeToken(TokenType.Identifier);
+            LE.Color = name.Value;
+            return new EndNode();
+        }
+    }
+
+    private Node ParseRestore
+    {
+        get
+        {
+            _ = ConsumeToken(TokenType.Restore);
+            LE.Color = "default";
+            return new EndNode();
+        }
+    }
 }
