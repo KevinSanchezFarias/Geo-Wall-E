@@ -122,14 +122,16 @@ public partial class Lexer
         }
         return result switch
         {
+            "draw" => new Token(TokenType.DrawKeyword, result, Line, Column),
+            "measure" => new Token(TokenType.MeasureKeyword, result, Line, Column),
             "point" => new Token(TokenType.Point, result, Line, Column),
             "line" => new Token(TokenType.Figure, result, Line, Column),
             "segment" => new Token(TokenType.Figure, result, Line, Column),
             "ray" => new Token(TokenType.Figure, result, Line, Column),
             "circle" => new Token(TokenType.Figure, result, Line, Column),
             "arc" => new Token(TokenType.Figure, result, Line, Column),
-            "color" => new Token(TokenType.Color, result, Line, Column),
-            "restore" => new Token(TokenType.Restore, result, Line, Column),
+            "color" => new Token(TokenType.ColorKeyword, result, Line, Column),
+            "restore" => new Token(TokenType.RestoreKeyword, result, Line, Column),
             "const" => new Token(TokenType.Const, result, Line, Column),
             "flinq" => new Token(TokenType.Flinq, result, Line, Column),
             "llinq" => new Token(TokenType.LLinq, result, Line, Column),

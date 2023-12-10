@@ -63,11 +63,12 @@ public class ValueNode(object value) : Node
 {
     public object Value { get; } = value;
 }
-public class CircleNode(PointNode cen, double rad) : Node
+public class CircleNode(string name, PointNode cen, Node rad, Node Comment) : Node
 {
-    public string Name { get; } = "circle";
+    public string Name { get; } = name;
     public PointNode Center { get; } = cen;
-    public double Radius { get; } = rad;
+    public Node Radius { get; } = rad;
+    public Node Comment { get; } = Comment;
 }
 
 public class LineNode(string name, PointNode A, PointNode B, Node Comment) : Node
@@ -78,31 +79,39 @@ public class LineNode(string name, PointNode A, PointNode B, Node Comment) : Nod
     public Node Comment { get; } = Comment;
 }
 
-public class SegmentNode(List<Node> nodes) : Node
+public class SegmentNode(string name, PointNode A, PointNode B, Node Comment) : Node
 {
-    public string Name { get; } = "segment";
-    public Node X1 { get; } = nodes[0];
-    public Node Y1 { get; } = nodes[1];
-    public Node X2 { get; } = nodes[2];
-    public Node Y2 { get; } = nodes[3];
+    public string Name { get; } = name;
+    public PointNode A { get; } = A;
+    public PointNode B { get; } = B;
+    public Node Comment { get; } = Comment;
 }
 
-public class RayNode(List<Node> nodes) : Node
+public class RayNode(string name, PointNode p1, PointNode p2, Node comment) : Node
 {
-    public string Name { get; } = "ray";
-    public Node X1 { get; } = nodes[0];
-    public Node Y1 { get; } = nodes[1];
-    public Node X2 { get; } = nodes[2];
-    public Node Y2 { get; } = nodes[3];
+    public string Name { get; } = name;
+    public PointNode P1 { get; } = p1;
+    public PointNode P2 { get; } = p2;
+    public Node Comment { get; } = comment;
+
 }
 
-public class ArcNode(List<Node> nodes) : Node
+public class ArcNode(string name, PointNode p1, PointNode p2, PointNode p3, Node comment) : Node
 {
-    public string Name { get; } = "arc";
-    public Node X1 { get; } = nodes[0];
-    public Node Y1 { get; } = nodes[1];
-    public Node X2 { get; } = nodes[2];
-    public Node Y2 { get; } = nodes[3];
-    public Node X3 { get; } = nodes[4];
-    public Node Y3 { get; } = nodes[5];
+    public string Name { get; } = name;
+    public PointNode P1 { get; } = p1;
+    public PointNode P2 { get; } = p2;
+    public PointNode P3 { get; } = p3;
+    public Node Comment { get; } = comment;
+}
+public class DrawNode(Node figures) : Node
+{
+    public Node Figures { get; } = figures;
+}
+
+public class ReturnToDrawNode(Node figures, string color, List<Node> coords) : Node
+{
+    public Node Figures { get; } = figures;
+    public string Color { get; } = color;
+    public List<Node> Coords { get; } = coords;
 }

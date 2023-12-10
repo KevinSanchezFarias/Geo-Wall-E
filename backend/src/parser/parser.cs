@@ -17,6 +17,7 @@ public class Parser(List<Token> tokens)
             ? Tokens[currentTokenIndex++]
             : throw new Exception($"Expected token {type}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
     }
+    #region RecursiveDescentParser
     public Node Parse()
     {
         return ParseExpression();
@@ -88,9 +89,11 @@ public class Parser(List<Token> tokens)
             return (CurrentToken?.Type) switch
             {
                 TokenType.Figure => ParseFigure(),
+                TokenType.DrawKeyword => ParseDraw,
+                TokenType.MeasureKeyword => ParseMeasure,
                 TokenType.FunctionKeyword => ParseFunctionDeclaration,
-                TokenType.Color => ParseColor,
-                TokenType.Restore => ParseRestore,
+                TokenType.ColorKeyword => ParseColor,
+                TokenType.RestoreKeyword => ParseRestore,
                 TokenType.Const => ParseConstDeclaration,
                 TokenType.LetKeyword => ParseVariableDeclaration(),
                 TokenType.Point => ParsePointExpression,
@@ -102,41 +105,206 @@ public class Parser(List<Token> tokens)
             };
         }
     }
-
+    #endregion
+    #region Figures
     private Node ParseFigure()
     {
         var type = CurrentToken?.Value;
         return type switch
         {
             "line" => ParseLine,
-            "segment" => ParseSegment(),
-            "ray" => ParseRay(),
-            "circle" => ParseCircle(),
-            "arc" => ParseArc(),
+            "segment" => ParseSegment,
+            "ray" => ParseRay,
+            "circle" => ParseCircle,
+            "arc" => ParseArc,
             _ => throw new Exception($"It's not a figure {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}. How do you even get here?"),
         };
     }
-
-    private Node ParseArc()
+    private Node ParseArc
     {
-        throw new NotImplementedException();
-    }
+        get
+        {
+            // arc arc(p1, p2, p3) "It's an arc!";
+            _ = ConsumeToken(TokenType.Figure);
+            var name = ConsumeToken(TokenType.Identifier);
 
-    private Node ParseCircle()
+            if (CurrentToken?.Type != TokenType.LParen)
+            {
+                throw new Exception($"Expected token {TokenType.LParen}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+
+            _ = ConsumeToken(TokenType.LParen);
+            var p1 = (PointNode)ParseExpression();
+            if (p1 is not PointNode)
+            {
+                throw new Exception($"Expected token {TokenType.Point}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+
+            if (CurrentToken?.Type != TokenType.Comma)
+            {
+                throw new Exception($"Expected token {TokenType.Comma}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+
+            _ = ConsumeToken(TokenType.Comma);
+            var p2 = (PointNode)ParseExpression();
+            if (p2 is not PointNode)
+            {
+                throw new Exception($"Expected token {TokenType.Point}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+
+            if (CurrentToken?.Type != TokenType.Comma)
+            {
+                throw new Exception($"Expected token {TokenType.Comma}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+
+            _ = ConsumeToken(TokenType.Comma);
+            var p3 = (PointNode)ParseExpression();
+            if (p3 is not PointNode)
+            {
+                throw new Exception($"Expected token {TokenType.Point}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+
+            _ = ConsumeToken(TokenType.RParen);
+            object comment = null!;
+            if (CurrentToken?.Type == TokenType.StringLiteral)
+            {
+                comment = ParseStringLiteral;
+            }
+
+            LE.arcND.Add(new ArcNode(name.Value, p1, p2, p3, (Node)comment));
+            return new EndNode();
+        }
+
+    }
+    private Node ParseCircle
     {
-        throw new NotImplementedException();
-    }
+        //circle cir(p1, r) "It's a circle!"
+        get
+        {
+            _ = ConsumeToken(TokenType.Figure);
+            var name = ConsumeToken(TokenType.Identifier);
 
-    private Node ParseRay()
+            if (CurrentToken?.Type != TokenType.LParen)
+            {
+                throw new Exception($"Expected token {TokenType.LParen}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+
+            _ = ConsumeToken(TokenType.LParen);
+            var p1 = (PointNode)ParseExpression();
+            if (p1 is not PointNode)
+            {
+                throw new Exception($"Expected token {TokenType.Point}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+
+            if (CurrentToken?.Type != TokenType.Comma)
+            {
+                throw new Exception($"Expected token {TokenType.Comma}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+
+            _ = ConsumeToken(TokenType.Comma);
+            var r = ParseExpression();
+
+            _ = ConsumeToken(TokenType.RParen);
+            object comment = null!;
+            if (CurrentToken?.Type == TokenType.StringLiteral)
+            {
+                comment = ParseStringLiteral;
+            }
+
+
+            LE.cirND.Add(new CircleNode(name.Value, p1, r, (Node)comment));
+            return new EndNode();
+        }
+    }
+    private Node ParseRay
     {
-        throw new NotImplementedException();
-    }
+        get
+        {
+            // ray ray(p1, p2) "It's a ray!";
+            _ = ConsumeToken(TokenType.Figure);
+            var name = ConsumeToken(TokenType.Identifier);
 
-    private Node ParseSegment()
+            if (CurrentToken?.Type != TokenType.LParen)
+            {
+                throw new Exception($"Expected token {TokenType.LParen}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+
+            _ = ConsumeToken(TokenType.LParen);
+            var p1 = (PointNode)ParseExpression();
+            if (p1 is not PointNode)
+            {
+                throw new Exception($"Expected token {TokenType.Point}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+
+            if (CurrentToken?.Type != TokenType.Comma)
+            {
+                throw new Exception($"Expected token {TokenType.Comma}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+
+            _ = ConsumeToken(TokenType.Comma);
+            var p2 = (PointNode)ParseExpression();
+            if (p2 is not PointNode)
+            {
+                throw new Exception($"Expected token {TokenType.Point}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+
+            _ = ConsumeToken(TokenType.RParen);
+            object comment = null!;
+            if (CurrentToken?.Type == TokenType.StringLiteral)
+            {
+                comment = ParseStringLiteral;
+            }
+
+            LE.rayND.Add(new RayNode(name.Value, p1, p2, (Node)comment));
+            return new EndNode();
+        }
+
+    }
+    private Node ParseSegment
     {
-        throw new NotImplementedException();
-    }
+        get
+        {
+            // segment seg(p1, p2) "It's a segment!";
+            _ = ConsumeToken(TokenType.Figure);
+            var name = ConsumeToken(TokenType.Identifier);
 
+            if (CurrentToken?.Type != TokenType.LParen)
+            {
+                throw new Exception($"Expected token {TokenType.LParen}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+
+            _ = ConsumeToken(TokenType.LParen);
+            var p1 = (PointNode)ParseExpression();
+            if (p1 is not PointNode)
+            {
+                throw new Exception($"Expected token {TokenType.Point}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+
+            if (CurrentToken?.Type != TokenType.Comma)
+            {
+                throw new Exception($"Expected token {TokenType.Comma}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+
+            _ = ConsumeToken(TokenType.Comma);
+            var p2 = (PointNode)ParseExpression();
+            if (p2 is not PointNode)
+            {
+                throw new Exception($"Expected token {TokenType.Point}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+
+            _ = ConsumeToken(TokenType.RParen);
+            object comment = null!;
+            if (CurrentToken?.Type == TokenType.StringLiteral)
+            {
+                comment = ParseStringLiteral;
+            }
+
+            LE.segND.Add(new SegmentNode(name.Value, p1, p2, (Node)comment));
+            return new EndNode();
+
+        }
+
+    }
     private Node ParseLine
     {
         get
@@ -144,17 +312,74 @@ public class Parser(List<Token> tokens)
             // line ln (p1, p2) "It's a line!";
             _ = ConsumeToken(TokenType.Figure);
             var name = ConsumeToken(TokenType.Identifier);
+
+            if (CurrentToken?.Type != TokenType.LParen)
+            {
+                throw new Exception($"Expected token {TokenType.LParen}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+
             _ = ConsumeToken(TokenType.LParen);
-            var p1 = ParseExpression();
+            var p1 = (PointNode)ParseExpression();
+            if (p1 is not PointNode)
+            {
+                throw new Exception($"Expected token {TokenType.Point}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+
+            if (CurrentToken?.Type != TokenType.Comma)
+            {
+                throw new Exception($"Expected token {TokenType.Comma}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+
             _ = ConsumeToken(TokenType.Comma);
-            var p2 = ParseExpression();
+            var p2 = (PointNode)ParseExpression();
+            if (p2 is not PointNode)
+            {
+                throw new Exception($"Expected token {TokenType.Point}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+
             _ = ConsumeToken(TokenType.RParen);
-            var comment = ParseStringLiteral;
-            LE.linND.Add(new LineNode(name.Value, A: (PointNode)p1, B: (PointNode)p2, comment));
+            object comment = null!;
+            if (CurrentToken?.Type == TokenType.StringLiteral)
+            {
+                comment = ParseStringLiteral;
+            }
+
+            LE.linND.Add(new LineNode(name.Value, p1, p2, (Node)comment));
             return new EndNode();
         }
     }
+    private Node ParseColor
+    {
+        get
+        {
+            _ = ConsumeToken(TokenType.ColorKeyword);
+            var name = ConsumeToken(TokenType.Identifier);
+            LE.Color = name.Value;
+            return new EndNode();
+        }
+    }
+    private Node ParseRestore
+    {
+        get
+        {
+            _ = ConsumeToken(TokenType.RestoreKeyword);
+            LE.Color = "default";
+            return new EndNode();
+        }
+    }
+    private Node ParseDraw
+    {
+        get
+        {
+            _ = ConsumeToken(TokenType.DrawKeyword);
+            var toDraw = ParseExpression();
 
+            return new DrawNode(toDraw);
+        }
+    }
+    public Node ParseMeasure { get; private set; }
+    #endregion
+    #region Gsharp
     private Node ParseNumber
     {
         get
@@ -163,7 +388,6 @@ public class Parser(List<Token> tokens)
             return new ValueNode(double.Parse(token.Value));
         }
     }
-
     private Node ParseIdentifier
     {
         get
@@ -178,38 +402,28 @@ public class Parser(List<Token> tokens)
                 while (CurrentToken?.Type != TokenType.RParen)
                 {
                     args.Add(ParseExpression());
-                    if (CurrentToken?.Type == TokenType.Comma)
-                    {
-                        _ = ConsumeToken(TokenType.Comma);
-                    }
+                    if (CurrentToken?.Type == TokenType.Comma) { _ = ConsumeToken(TokenType.Comma); }
                 }
                 _ = ConsumeToken(TokenType.RParen);
                 // Check if the function name is in the list of predefined functions
-                if (LE.predefinedFunctions.ContainsKey(token.Value))
-                {
-                    return new FunctionPredefinedNode(token.Value, args);
-                }
-                // Check if the function name is in the list of declared functions
-                else
-                {
-                    if (FDN.Any(f => f.Name == token.Value))
-                    {
-                        return new FunctionCallNode(token.Value, args);
-                    }
-                    else
-                    {
-                        throw new Exception($"Undefined function {token.Value}");
-                    }
-                }
-            }
-            else if (LE.poiND.Any(p => p.Name == token.Value))
-            {
-                return LE.poiND.First(p => p.Name == token.Value);
+                return LE.predefinedFunctions.ContainsKey(token.Value)
+                    ? new FunctionPredefinedNode(token.Value, args)
+                    : FDN.Any(f => f.Name == token.Value)
+                        ? (Node)new FunctionCallNode(token.Value, args)
+                        : throw new Exception($"Undefined function {token.Value}");
             }
             else
             {
-                // Parse an identifier
-                return new IdentifierNode(token.Value);
+                return token.Value switch
+                {
+                    var value when LE.poiND.Any(p => p.Name == value) => LE.poiND.First(p => p.Name == value),
+                    var value when LE.cirND.Any(c => c.Name == value) => LE.cirND.First(c => c.Name == value),
+                    var value when LE.arcND.Any(a => a.Name == value) => LE.arcND.First(a => a.Name == value),
+                    var value when LE.linND.Any(l => l.Name == value) => LE.linND.First(l => l.Name == value),
+                    var value when LE.rayND.Any(r => r.Name == value) => LE.rayND.First(r => r.Name == value),
+                    var value when LE.segND.Any(s => s.Name == value) => LE.segND.First(s => s.Name == value),
+                    _ => new IdentifierNode(token.Value),// Parse an identifier
+                };
             }
         }
     }
@@ -338,25 +552,5 @@ public class Parser(List<Token> tokens)
             return new EndNode();
         }
     }
-
-    private Node ParseColor
-    {
-        get
-        {
-            _ = ConsumeToken(TokenType.Color);
-            var name = ConsumeToken(TokenType.Identifier);
-            LE.Color = name.Value;
-            return new EndNode();
-        }
-    }
-
-    private Node ParseRestore
-    {
-        get
-        {
-            _ = ConsumeToken(TokenType.Restore);
-            LE.Color = "default";
-            return new EndNode();
-        }
-    }
+    #endregion
 }

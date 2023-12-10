@@ -22,6 +22,8 @@ public class Evaluator(Node ast)
                 return null!;
             case ValueNode valueNode:
                 return valueNode.Value;
+            case DrawNode drawNode:
+                return DrawHandler(drawNode);
             case FunctionCallNode functionCallNode:
                 return InvokeDeclaredFunctionsHandler(functionCallNode);
             case FunctionPredefinedNode functionPredefinedNode:
@@ -171,5 +173,11 @@ public class Evaluator(Node ast)
             return result;
         }
         #endregion
+    }
+
+    private object DrawHandler(DrawNode drawNode)
+    {
+        var fig = drawNode.Figures;
+        throw new NotImplementedException();
     }
 }

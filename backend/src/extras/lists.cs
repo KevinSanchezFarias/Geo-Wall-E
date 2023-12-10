@@ -7,6 +7,7 @@ namespace Lists
     {
         private static string color = "default";
         public static readonly List<PointNode> poiND = [];
+        public static readonly List<ArcNode> arcND = [];
         public static readonly List<CircleNode> cirND = [];
         public static readonly List<LineNode> linND = [];
         public static readonly List<SegmentNode> segND = [];

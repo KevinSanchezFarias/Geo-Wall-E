@@ -26,11 +26,13 @@ public enum TokenType
     ElseKeyword,
     InKeyword,
     FunctionKeyword,
+    DrawKeyword,
+    MeasureKeyword,
     EOL,
     EOF,
     Figure,
-    Color,
-    Restore
+    ColorKeyword,
+    RestoreKeyword
 }
 /// <summary>
 /// Represents a token in the program.
