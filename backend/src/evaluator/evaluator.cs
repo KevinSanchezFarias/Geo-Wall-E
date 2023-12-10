@@ -2,6 +2,17 @@ using Nodes;
 using ParserAnalize;
 
 namespace EvaluatorAnalize;
+
+public struct ToDraw
+{
+    public string figure;
+    public string color;
+    public Point[] points;
+    public double rad;
+    public string comment;
+
+
+}
 public class Evaluator(Node ast)
 {
 
@@ -12,10 +23,39 @@ public class Evaluator(Node ast)
     {
         return Visit(AST);
     }
+    public object Draw(DrawNode node)
+    {
+        var points = node.Figures switch
+        {
+            CircleNode cNode => [new Point((int)cNode.Center.X, (int)cNode.Center.Y)],
+            LineNode lineNode => [new Point((int)lineNode.A.X, (int)lineNode.A.Y), new Point((int)lineNode.B.X, (int)lineNode.B.Y)],
+            SegmentNode segmentNode => [new Point((int)segmentNode.A.X, (int)segmentNode.A.Y), new Point((int)segmentNode.B.X, (int)segmentNode.B.Y)],
+            RayNode rayNode => [new Point((int)rayNode.P1.X, (int)rayNode.P1.Y), new Point((int)rayNode.P2.X, (int)rayNode.P2.Y)],
+            ArcNode arcNode => new List<Point> { new Point((int)arcNode.P1.X, (int)arcNode.P1.Y), new Point((int)arcNode.P2.X, (int)arcNode.P2.Y), new Point((int)arcNode.P3.X, (int)arcNode.P3.Y) },
+            _ => throw new Exception($"Unexpected node type {node.Figures.GetType()}")
+        };
+        var comment = node.Figures switch
+        {
+            CircleNode cNode => cNode.Comment as ValueNode,
+            LineNode lineNode => lineNode.Comment as ValueNode,
+            SegmentNode segmentNode => segmentNode.Comment as ValueNode,
+            RayNode rayNode => rayNode.Comment as ValueNode,
+            ArcNode arcNode => arcNode.Comment as ValueNode,
+            _ => null
+        };
+        var toDraw = new ToDraw
+        {
+            color = LE.Color,
+            figure = node.Figures.GetType().Name,
+            points = [.. points],
+            rad = node.Figures is CircleNode circleNode ? (double)Visit(circleNode.Radius) : 0,
+            comment = comment?.Value.ToString() ?? ""
+        };
+        return toDraw;
+    }
 
     private object Visit(Node node)
     {
-
         switch (node)
         {
             case EndNode:
@@ -23,7 +63,7 @@ public class Evaluator(Node ast)
             case ValueNode valueNode:
                 return valueNode.Value;
             case DrawNode drawNode:
-                return DrawHandler(drawNode);
+                return Draw(drawNode);
             case FunctionCallNode functionCallNode:
                 return InvokeDeclaredFunctionsHandler(functionCallNode);
             case FunctionPredefinedNode functionPredefinedNode:
@@ -173,11 +213,5 @@ public class Evaluator(Node ast)
             return result;
         }
         #endregion
-    }
-
-    private object DrawHandler(DrawNode drawNode)
-    {
-        var fig = drawNode.Figures;
-        throw new NotImplementedException();
     }
 }

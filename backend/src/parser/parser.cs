@@ -377,7 +377,14 @@ public class Parser(List<Token> tokens)
             return new DrawNode(toDraw);
         }
     }
-    public Node ParseMeasure { get; private set; }
+    private Node ParseMeasure
+    {
+        get
+        {
+            throw new NotImplementedException();
+
+        }
+    }
     #endregion
     #region Gsharp
     private Node ParseNumber

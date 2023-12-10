@@ -5,7 +5,7 @@ using EvaluatorAnalize;
 namespace InterpreterAnalizer;
 public class Interpreter
 {
-    public static string? Interpret(string input)
+    public static object Interpret(string input)
     {
         // Split the string into lines
         var lines = input.Split(";\r", StringSplitOptions.RemoveEmptyEntries);
@@ -23,6 +23,6 @@ public class Interpreter
             }
             catch (Exception e) { return e.Message; }
         }
-        return lineResult == null ? "" : lineResult.ToString();
+        return lineResult ?? "";
     }
 }
