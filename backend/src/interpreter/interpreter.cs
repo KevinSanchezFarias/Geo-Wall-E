@@ -18,9 +18,16 @@ public class Interpreter
                 var parser = new Parser(lexer.LexTokens);
                 var evaluator = new Evaluator(parser.Parse());
                 object? lineResult = evaluator.Evaluate();
-                if (lineResult is not null && lineResult is ToDraw draw)
+                if (lineResult is not null)
                 {
-                    toDraws.Add(draw);
+                    if (lineResult is ToDraw draw)
+                    {
+                        toDraws.Add(draw);
+                    }
+                    else if (lineResult is List<ToDraw> drawList)
+                    {
+                        toDraws.AddRange(drawList);
+                    }
                 }
             }
             catch (Exception e) { return e.Message; }

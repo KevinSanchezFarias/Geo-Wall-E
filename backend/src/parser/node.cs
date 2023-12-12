@@ -1,6 +1,5 @@
 namespace Nodes;
 public abstract class Node { }
-
 public class VariableDeclarationNode : Node
 {
     public string Identifier { get; }
@@ -14,7 +13,6 @@ public class VariableDeclarationNode : Node
         Body = body;
     }
 }
-
 public class MultipleVariableDeclarationNode : Node
 {
     public List<VariableDeclarationNode> Declarations { get; }
@@ -26,7 +24,6 @@ public class MultipleVariableDeclarationNode : Node
         Body = body;
     }
 }
-
 public class IdentifierNode : Node
 {
     public string Identifier { get; }
@@ -36,7 +33,6 @@ public class IdentifierNode : Node
         Identifier = identifier;
     }
 }
-
 public class ConstDeclarationNode : Node
 {
     public string Identifier { get; }
@@ -46,6 +42,17 @@ public class ConstDeclarationNode : Node
     {
         Identifier = identifier;
         Value = value;
+    }
+}
+public class SequenceNode : Node
+{
+    public string Identifier { get; }
+    public List<Node> Nodes { get; }
+
+    public SequenceNode(List<Node> nodes, string identifier)
+    {
+        Nodes = nodes;
+        Identifier = identifier;
     }
 }
 public class BinaryExpressionNode : Node
@@ -192,7 +199,6 @@ public class RayNode : Node
         Comment = comment;
     }
 }
-
 public class ArcNode : Node
 {
     public string Name { get; }

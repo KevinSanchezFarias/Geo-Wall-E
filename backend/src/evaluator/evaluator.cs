@@ -28,34 +28,59 @@ public class Evaluator
     }
     public object Draw(DrawNode node)
     {
-        var points = node.Figures switch
+        if (node.Figures is SequenceNode sequenceNode)
         {
-            PointNode pointNode => new() { new Point((int)pointNode.X, (int)pointNode.Y) },
-            CircleNode cNode => new() { new Point((int)cNode.Center.X, (int)cNode.Center.Y) },
-            LineNode lineNode => new() { new Point((int)lineNode.A.X, (int)lineNode.A.Y), new Point((int)lineNode.B.X, (int)lineNode.B.Y) },
-            SegmentNode segmentNode => new() { new Point((int)segmentNode.A.X, (int)segmentNode.A.Y), new Point((int)segmentNode.B.X, (int)segmentNode.B.Y) },
-            RayNode rayNode => new() { new Point((int)rayNode.P1.X, (int)rayNode.P1.Y), new Point((int)rayNode.P2.X, (int)rayNode.P2.Y) },
-            ArcNode arcNode => new List<Point> { new((int)arcNode.P1.X, (int)arcNode.P1.Y), new((int)arcNode.P2.X, (int)arcNode.P2.Y), new((int)arcNode.P3.X, (int)arcNode.P3.Y) },
-            _ => throw new Exception($"Unexpected node type {node.Figures.GetType()}")
-        };
-        var comment = node.Figures switch
+            var toDrawList = new List<ToDraw>();
+            foreach (var figure in sequenceNode.Nodes)
+            {
+                if (figure is CircleNode cNode)
+                {
+                    var points = new List<Point> { new Point((int)cNode.Center.X, (int)cNode.Center.Y) };
+                    var comment = cNode.Comment as ValueNode;
+                    var toDraw = new ToDraw
+                    {
+                        color = LE.Color.First(),
+                        figure = cNode.GetType().Name,
+                        points = points.ToArray(),
+                        rad = (double)Visit(cNode.Radius),
+                        comment = comment?.Value.ToString() ?? ""
+                    };
+                    toDrawList.Add(toDraw);
+                }
+            }
+            return toDrawList;
+        }
+        else
         {
-            CircleNode cNode => cNode.Comment as ValueNode,
-            LineNode lineNode => lineNode.Comment as ValueNode,
-            SegmentNode segmentNode => segmentNode.Comment as ValueNode,
-            RayNode rayNode => rayNode.Comment as ValueNode,
-            ArcNode arcNode => arcNode.Comment as ValueNode,
-            _ => null
-        };
-        var toDraw = new ToDraw
-        {
-            color = LE.Color.First(),
-            figure = node.Figures.GetType().Name,
-            points = points.ToArray(),
-            rad = node.Figures is CircleNode circleNode ? (double)Visit(circleNode.Radius) : 0,
-            comment = comment?.Value.ToString() ?? ""
-        };
-        return toDraw;
+            var points = node.Figures switch
+            {
+                PointNode pointNode => new() { new Point((int)pointNode.X, (int)pointNode.Y) },
+                CircleNode cNode => new() { new Point((int)cNode.Center.X, (int)cNode.Center.Y) },
+                LineNode lineNode => new() { new Point((int)lineNode.A.X, (int)lineNode.A.Y), new Point((int)lineNode.B.X, (int)lineNode.B.Y) },
+                SegmentNode segmentNode => new() { new Point((int)segmentNode.A.X, (int)segmentNode.A.Y), new Point((int)segmentNode.B.X, (int)segmentNode.B.Y) },
+                RayNode rayNode => new() { new Point((int)rayNode.P1.X, (int)rayNode.P1.Y), new Point((int)rayNode.P2.X, (int)rayNode.P2.Y) },
+                ArcNode arcNode => new List<Point> { new((int)arcNode.P1.X, (int)arcNode.P1.Y), new((int)arcNode.P2.X, (int)arcNode.P2.Y), new((int)arcNode.P3.X, (int)arcNode.P3.Y) },
+                _ => throw new Exception($"Unexpected node type {node.Figures.GetType()}")
+            };
+            var comment = node.Figures switch
+            {
+                CircleNode cNode => cNode.Comment as ValueNode,
+                LineNode lineNode => lineNode.Comment as ValueNode,
+                SegmentNode segmentNode => segmentNode.Comment as ValueNode,
+                RayNode rayNode => rayNode.Comment as ValueNode,
+                ArcNode arcNode => arcNode.Comment as ValueNode,
+                _ => null
+            };
+            var toDraw = new ToDraw
+            {
+                color = LE.Color.First(),
+                figure = node.Figures.GetType().Name,
+                points = points.ToArray(),
+                rad = node.Figures is CircleNode circleNode ? (double)Visit(circleNode.Radius) : 0,
+                comment = comment?.Value.ToString() ?? ""
+            };
+            return toDraw;
+        }
     }
     private object Visit(Node node)
     {

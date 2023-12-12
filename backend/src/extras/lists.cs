@@ -12,7 +12,7 @@ namespace Lists
         public static readonly List<LineNode> linND = new();
         public static readonly List<SegmentNode> segND = new();
         public static readonly List<RayNode> rayND = new();
-        public static readonly List<List<ConstDeclarationNode>> Seqs = new();
+        public static readonly List<SequenceNode> Seqs = new();
         public static readonly Dictionary<string, Func<double[], double>> predefinedFunctions = new()
     {
         { "Sin", args => Math.Sin(args[0]) },

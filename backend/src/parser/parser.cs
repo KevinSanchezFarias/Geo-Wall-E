@@ -6,7 +6,7 @@ namespace ParserAnalize;
 public class Parser
 {
     private List<Token> Tokens { get; set; }
-    private static List<FunctionDeclarationNode>? fDN = new();
+    private static List<FunctionDeclarationNode> fDN = new();
     private int currentTokenIndex = 0;
 
     private Token? CurrentToken => currentTokenIndex < Tokens.Count ? Tokens[currentTokenIndex] : null;
@@ -447,6 +447,7 @@ public class Parser
             {
                 return token.Value switch
                 {
+                    var value when LE.Seqs.Any(s => s.Identifier == value) => LE.Seqs.First(s => s.Identifier == value),
                     var value when LE.poiND.Any(p => p.Name == value) => LE.poiND.First(p => p.Name == value),
                     var value when LE.cirND.Any(c => c.Name == value) => LE.cirND.First(c => c.Name == value),
                     var value when LE.arcND.Any(a => a.Name == value) => LE.arcND.First(a => a.Name == value),
@@ -575,59 +576,90 @@ public class Parser
         get
         {
             _ = ConsumeToken(TokenType.Const);
-            var name = ConsumeToken(TokenType.Identifier);
+            var names = new List<Token>();
+            do
+            {
+                names.Add(ConsumeToken(TokenType.Identifier));
+                if (CurrentToken?.Type != TokenType.Comma)
+                {
+                    break;
+                }
+                _ = ConsumeToken(TokenType.Comma);
+            } while (true);
+
             _ = ConsumeToken(TokenType.Operator);
 
             Node valueNode;
 
             if (CurrentToken?.Type == TokenType.LBrace)
             {
-                _ = ParseSequence;
+                valueNode = ParseSequence(names[0].Value);
             }
             else
             {
                 valueNode = ParseExpression();
-                LE.cDN.Insert(0, new ConstDeclarationNode(name.Value, valueNode)); // Store the valueNode at the beginning of the list
             }
-            return new EndNode();
-        }
-    }
-    private Node ParseSequence
-    {
-        get
-        {
-            _ = ConsumeToken(TokenType.LBrace);
 
-            var values = new List<Node>();
-            var constDeclarations = new List<ConstDeclarationNode>();
-
-            while (CurrentToken?.Type != TokenType.RBrace)
+            if (valueNode is SequenceNode sequenceNode)
             {
-                var valueNode = ParseExpression();
-                values.Add(valueNode);
-
-                // Create a constant declaration for each value and add it to the list
-                var constDeclaration = new ConstDeclarationNode(identifier: valueNode.ToString()!, value: valueNode);
-                constDeclarations.Add(constDeclaration);
-
-                if (CurrentToken?.Type == TokenType.Comma)
+                for (int i = 0; i < names.Count; i++)
                 {
-                    _ = ConsumeToken(TokenType.Comma);
-                }
-                else if (CurrentToken?.Type != TokenType.RBrace)
-                {
-                    throw new Exception("Expected ',' or '}'");
+                    // Only create a ConstDeclarationNode if it's not the last identifier or if there are no remaining nodes
+                    if (i < sequenceNode.Nodes.Count && (i != names.Count - 1 || i >= sequenceNode.Nodes.Count - 1))
+                    {
+                        LE.cDN.Insert(0, new ConstDeclarationNode(names[i].Value, sequenceNode.Nodes[i]));
+                    }
+
+                    // When we reach the last identifier and there are remaining nodes, create a new sequence with the remaining nodes
+                    if (i == names.Count - 1 && i < sequenceNode.Nodes.Count - 1)
+                    {
+                        var remainingNodes = sequenceNode.Nodes.Skip(i).ToList();
+                        LE.cDN.Insert(0, new ConstDeclarationNode(names[i].Value, new SequenceNode(remainingNodes, names[i].Value)));
+                    }
                 }
             }
+            else
+            {
+                LE.cDN.Insert(0, new ConstDeclarationNode(names[0].Value, valueNode));
+            }
 
-            _ = ConsumeToken(TokenType.RBrace);
-
-            // Add the list of constant declarations to the list of sequences
-            LE.Seqs.Add(constDeclarations);
             return new EndNode();
         }
     }
+    private Node ParseSequence(string name)
+    {
+        _ = ConsumeToken(TokenType.LBrace);
 
-    public static List<FunctionDeclarationNode>? FDN { get => fDN; set => fDN = value; }
+        var values = new List<Node>();
+        var constDeclarations = new List<ConstDeclarationNode>();
+
+        while (CurrentToken?.Type != TokenType.RBrace)
+        {
+            var valueNode = ParseExpression();
+            values.Add(valueNode);
+
+            // Create a constant declaration for each value and add it to the list
+            var constDeclaration = new ConstDeclarationNode(identifier: valueNode.ToString()!, value: valueNode);
+            constDeclarations.Add(constDeclaration);
+
+            if (CurrentToken?.Type == TokenType.Comma)
+            {
+                _ = ConsumeToken(TokenType.Comma);
+            }
+            else if (CurrentToken?.Type != TokenType.RBrace)
+            {
+                throw new Exception("Expected ',' or '}'");
+            }
+        }
+
+        _ = ConsumeToken(TokenType.RBrace);
+
+        // Create a unique identifier for the sequence
+        LE.Seqs.Add(new SequenceNode(values, name));
+        return new EndNode();
+
+    }
+
+    public static List<FunctionDeclarationNode> FDN { get => fDN; set => fDN = value; }
     #endregion
 }
