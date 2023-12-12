@@ -7,7 +7,7 @@ public class Interpreter
 {
     public static object Interpret(string input)
     {
-        List<ToDraw> toDraws = [];
+        List<ToDraw> toDraws = new();
         // Split the string into lines
         var lines = input.Split(";\r", StringSplitOptions.RemoveEmptyEntries);
         foreach (var line in lines)
@@ -18,9 +18,9 @@ public class Interpreter
                 var parser = new Parser(lexer.LexTokens);
                 var evaluator = new Evaluator(parser.Parse());
                 object? lineResult = evaluator.Evaluate();
-                if (lineResult is not null && lineResult is ToDraw)
+                if (lineResult is not null && lineResult is ToDraw draw)
                 {
-                    toDraws.Add((ToDraw)lineResult);
+                    toDraws.Add(draw);
                 }
             }
             catch (Exception e) { return e.Message; }

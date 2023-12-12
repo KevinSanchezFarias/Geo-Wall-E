@@ -11,10 +11,16 @@ public struct ToDraw
     public double rad;
     public string comment;
 }
-public class Evaluator(Node ast)
+public class Evaluator
 {
-    private Node AST { get; set; } = ast;
-    private Dictionary<string, object> variables = [];
+    private Node AST { get; set; }
+
+    public Evaluator(Node ast)
+    {
+        AST = ast;
+    }
+
+    private Dictionary<string, object> variables = new();
 
     public object Evaluate()
     {
@@ -24,11 +30,11 @@ public class Evaluator(Node ast)
     {
         var points = node.Figures switch
         {
-            PointNode pointNode => [new Point((int)pointNode.X, (int)pointNode.Y)],
-            CircleNode cNode => [new Point((int)cNode.Center.X, (int)cNode.Center.Y)],
-            LineNode lineNode => [new Point((int)lineNode.A.X, (int)lineNode.A.Y), new Point((int)lineNode.B.X, (int)lineNode.B.Y)],
-            SegmentNode segmentNode => [new Point((int)segmentNode.A.X, (int)segmentNode.A.Y), new Point((int)segmentNode.B.X, (int)segmentNode.B.Y)],
-            RayNode rayNode => [new Point((int)rayNode.P1.X, (int)rayNode.P1.Y), new Point((int)rayNode.P2.X, (int)rayNode.P2.Y)],
+            PointNode pointNode => new() { new Point((int)pointNode.X, (int)pointNode.Y) },
+            CircleNode cNode => new() { new Point((int)cNode.Center.X, (int)cNode.Center.Y) },
+            LineNode lineNode => new() { new Point((int)lineNode.A.X, (int)lineNode.A.Y), new Point((int)lineNode.B.X, (int)lineNode.B.Y) },
+            SegmentNode segmentNode => new() { new Point((int)segmentNode.A.X, (int)segmentNode.A.Y), new Point((int)segmentNode.B.X, (int)segmentNode.B.Y) },
+            RayNode rayNode => new() { new Point((int)rayNode.P1.X, (int)rayNode.P1.Y), new Point((int)rayNode.P2.X, (int)rayNode.P2.Y) },
             ArcNode arcNode => new List<Point> { new((int)arcNode.P1.X, (int)arcNode.P1.Y), new((int)arcNode.P2.X, (int)arcNode.P2.Y), new((int)arcNode.P3.X, (int)arcNode.P3.Y) },
             _ => throw new Exception($"Unexpected node type {node.Figures.GetType()}")
         };
@@ -45,7 +51,7 @@ public class Evaluator(Node ast)
         {
             color = LE.Color.First(),
             figure = node.Figures.GetType().Name,
-            points = [.. points],
+            points = points.ToArray(),
             rad = node.Figures is CircleNode circleNode ? (double)Visit(circleNode.Radius) : 0,
             comment = comment?.Value.ToString() ?? ""
         };

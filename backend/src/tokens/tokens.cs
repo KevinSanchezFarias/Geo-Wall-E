@@ -41,10 +41,18 @@ public enum TokenType
 /// <param name="value">The value of the token.</param>
 /// <param name="line">The line number where the token appears.</param>
 /// <param name="column">The column number where the token appears.</param>
-public class Token(TokenType type, string value, int line, int column)
+public class Token
 {
-    public TokenType Type { get; set; } = type;
-    public string Value { get; set; } = value;
-    public int Line { get; set; } = line;
-    public int Column { get; set; } = column;
+    public TokenType Type { get; set; }
+    public string Value { get; set; }
+    public int Line { get; set; }
+    public int Column { get; set; }
+
+    public Token(TokenType type, string value, int line, int column)
+    {
+        Type = type;
+        Value = value;
+        Line = line;
+        Column = column;
+    }
 }

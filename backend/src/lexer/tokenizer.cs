@@ -3,7 +3,7 @@ namespace LexerAnalize;
 
 public partial class Lexer
 {
-    public readonly List<Token> LexTokens = [];
+    public readonly List<Token> LexTokens = new();
     public void Tokenize()
     {
         while (CurrentChar != '\0')
