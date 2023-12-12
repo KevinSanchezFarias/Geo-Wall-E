@@ -5,13 +5,15 @@ namespace Lists
 {
     public static class LE
     {
-        private static string color = "default";
+        private static Stack<string> color = new(new[] { "black" });
+
         public static readonly List<PointNode> poiND = [];
         public static readonly List<ArcNode> arcND = [];
         public static readonly List<CircleNode> cirND = [];
         public static readonly List<LineNode> linND = [];
         public static readonly List<SegmentNode> segND = [];
         public static readonly List<RayNode> rayND = [];
+        public static readonly List<List<ConstDeclarationNode>> Seqs = [];
 
         public static readonly Dictionary<string, Func<double[], double>> predefinedFunctions = new()
     {
@@ -54,6 +56,6 @@ namespace Lists
         new ConstDeclarationNode("AVOGADRO", new ValueNode(6.02214076e23)),
     ];
 
-        public static string Color { get => color; set => color = value; }
+        public static Stack<string> Color { get => color; set => color = value; }
     }
 }

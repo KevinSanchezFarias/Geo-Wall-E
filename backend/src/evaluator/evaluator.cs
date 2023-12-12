@@ -10,8 +10,6 @@ public struct ToDraw
     public Point[] points;
     public double rad;
     public string comment;
-
-
 }
 public class Evaluator(Node ast)
 {
@@ -27,11 +25,12 @@ public class Evaluator(Node ast)
     {
         var points = node.Figures switch
         {
+            PointNode pointNode => [new Point((int)pointNode.X, (int)pointNode.Y)],
             CircleNode cNode => [new Point((int)cNode.Center.X, (int)cNode.Center.Y)],
             LineNode lineNode => [new Point((int)lineNode.A.X, (int)lineNode.A.Y), new Point((int)lineNode.B.X, (int)lineNode.B.Y)],
             SegmentNode segmentNode => [new Point((int)segmentNode.A.X, (int)segmentNode.A.Y), new Point((int)segmentNode.B.X, (int)segmentNode.B.Y)],
             RayNode rayNode => [new Point((int)rayNode.P1.X, (int)rayNode.P1.Y), new Point((int)rayNode.P2.X, (int)rayNode.P2.Y)],
-            ArcNode arcNode => new List<Point> { new Point((int)arcNode.P1.X, (int)arcNode.P1.Y), new Point((int)arcNode.P2.X, (int)arcNode.P2.Y), new Point((int)arcNode.P3.X, (int)arcNode.P3.Y) },
+            ArcNode arcNode => new List<Point> { new((int)arcNode.P1.X, (int)arcNode.P1.Y), new((int)arcNode.P2.X, (int)arcNode.P2.Y), new((int)arcNode.P3.X, (int)arcNode.P3.Y) },
             _ => throw new Exception($"Unexpected node type {node.Figures.GetType()}")
         };
         var comment = node.Figures switch
@@ -45,7 +44,7 @@ public class Evaluator(Node ast)
         };
         var toDraw = new ToDraw
         {
-            color = LE.Color,
+            color = LE.Color.First(),
             figure = node.Figures.GetType().Name,
             points = [.. points],
             rad = node.Figures is CircleNode circleNode ? (double)Visit(circleNode.Radius) : 0,
@@ -68,6 +67,8 @@ public class Evaluator(Node ast)
                 return InvokeDeclaredFunctionsHandler(functionCallNode);
             case FunctionPredefinedNode functionPredefinedNode:
                 return FunctionPredefinedHandler(functionPredefinedNode);
+            case MeasureNode measureNode:
+                return MeasureNodeHandler(measureNode);
             case BinaryExpressionNode binaryExpressionNode:
                 return BinaryHandler(binaryExpressionNode);
             case IfExpressionNode ifExpressionNode:
@@ -161,9 +162,15 @@ public class Evaluator(Node ast)
             }
             else if (LE.cDN.Any(c => c.Identifier == identifierNode.Identifier))
             {
-                return LE.cDN.First(c => c.Identifier == identifierNode.Identifier).Value is ValueNode vnc
-                    ? vnc.Value
-                    : LE.cDN.First(c => c.Identifier == identifierNode.Identifier).Value;
+                if (LE.cDN.First(c => c.Identifier == identifierNode.Identifier).Value is ValueNode vnc)
+                {
+                    return vnc.Value;
+                }
+                else
+                {
+                    var constNode = LE.cDN.First(c => c.Identifier == identifierNode.Identifier);
+                    return constNode.Value is Node ConstNode ? Visit(ConstNode) : constNode.Value;
+                }
             }
             else
             {
@@ -213,5 +220,16 @@ public class Evaluator(Node ast)
             return result;
         }
         #endregion
+    }
+
+    private object MeasureNodeHandler(MeasureNode measureNode)
+    {
+        if (measureNode.P1 is PointNode pointNodeA && measureNode.P2 is PointNode pointNodeB)
+        {
+            var x = pointNodeA.X - pointNodeB.X;
+            var y = pointNodeA.Y - pointNodeB.Y;
+            return Math.Sqrt((x * x) + (y * y));
+        }
+        throw new Exception($"Invalid measure node {measureNode} passed to measure handler, is it possible to even get here?");
     }
 }

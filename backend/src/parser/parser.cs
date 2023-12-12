@@ -1,5 +1,6 @@
 using Tokens;
 using Nodes;
+using Accessibility;
 
 namespace ParserAnalize;
 public class Parser(List<Token> tokens)
@@ -354,7 +355,7 @@ public class Parser(List<Token> tokens)
         {
             _ = ConsumeToken(TokenType.ColorKeyword);
             var name = ConsumeToken(TokenType.Identifier);
-            LE.Color = name.Value;
+            LE.Color.Push(name.Value);
             return new EndNode();
         }
     }
@@ -363,7 +364,7 @@ public class Parser(List<Token> tokens)
         get
         {
             _ = ConsumeToken(TokenType.RestoreKeyword);
-            LE.Color = "default";
+            LE.Color.Pop();
             return new EndNode();
         }
     }
@@ -381,7 +382,26 @@ public class Parser(List<Token> tokens)
     {
         get
         {
-            throw new NotImplementedException();
+            //measure(p1, p2);
+            _ = ConsumeToken(TokenType.MeasureKeyword);
+            if (CurrentToken?.Type != TokenType.LParen)
+            {
+                throw new Exception($"Expected token {TokenType.LParen}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+            //Point 1
+            _ = ConsumeToken(TokenType.LParen);
+            var p1 = (PointNode)ParseExpression();
+
+            //Comma
+            if (p1 is not PointNode) throw new Exception($"Expected token {TokenType.Point}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            if (CurrentToken?.Type != TokenType.Comma) throw new Exception($"Expected token {TokenType.Comma}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            _ = ConsumeToken(TokenType.Comma);
+            //Point 2 
+            var p2 = (PointNode)ParseExpression();
+            if (p2 is not PointNode) throw new Exception($"Expected token {TokenType.Point}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+
+            _ = ConsumeToken(TokenType.RParen);
+            return new MeasureNode(p1, p2);
 
         }
     }
@@ -553,9 +573,53 @@ public class Parser(List<Token> tokens)
             _ = ConsumeToken(TokenType.Const);
             var name = ConsumeToken(TokenType.Identifier);
             _ = ConsumeToken(TokenType.Operator);
-            var valueNode = ParseExpression();
 
-            LE.cDN.Insert(0, new ConstDeclarationNode(name.Value, valueNode)); // Store the valueNode at the beginning of the list
+            Node valueNode;
+
+            if (CurrentToken?.Type == TokenType.LBrace)
+            {
+                _ = ParseSequence;
+            }
+            else
+            {
+                valueNode = ParseExpression();
+                LE.cDN.Insert(0, new ConstDeclarationNode(name.Value, valueNode)); // Store the valueNode at the beginning of the list
+            }
+            return new EndNode();
+        }
+    }
+    private Node ParseSequence
+    {
+        get
+        {
+            _ = ConsumeToken(TokenType.LBrace);
+
+            var values = new List<Node>();
+            var constDeclarations = new List<ConstDeclarationNode>();
+
+            while (CurrentToken?.Type != TokenType.RBrace)
+            {
+                var valueNode = ParseExpression();
+                values.Add(valueNode);
+
+                // Create a constant declaration for each value and add it to the list
+                var constDeclaration = new ConstDeclarationNode(identifier: valueNode.ToString(), value: valueNode);
+                constDeclarations.Add(constDeclaration);
+
+                if (CurrentToken?.Type == TokenType.Comma)
+                {
+                    _ = ConsumeToken(TokenType.Comma);
+                }
+                else if (CurrentToken?.Type != TokenType.RBrace)
+                {
+                    throw new Exception("Expected ',' or '}'");
+                }
+            }
+
+            _ = ConsumeToken(TokenType.RBrace);
+
+            // Add the list of constant declarations to the list of sequences
+            LE.Seqs.Add(constDeclarations);
             return new EndNode();
         }
     }

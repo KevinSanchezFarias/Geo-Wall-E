@@ -104,6 +104,12 @@ public class ArcNode(string name, PointNode p1, PointNode p2, PointNode p3, Node
     public PointNode P3 { get; } = p3;
     public Node Comment { get; } = comment;
 }
+public class MeasureNode(PointNode p1, PointNode p2) : Node
+{
+    public PointNode P1 { get; } = p1;
+    public PointNode P2 { get; } = p2;
+
+}
 public class DrawNode(Node figures) : Node
 {
     public Node Figures { get; } = figures;
