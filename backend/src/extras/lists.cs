@@ -6,7 +6,6 @@ namespace Lists
     public static class LE
     {
         private static Stack<string> color = new(new[] { "black" });
-
         public static readonly List<PointNode> poiND = [];
         public static readonly List<ArcNode> arcND = [];
         public static readonly List<CircleNode> cirND = [];
@@ -55,7 +54,6 @@ namespace Lists
         new ConstDeclarationNode("GOLDENRATIO", new ValueNode(1.61803398874989484820458683436563811772030917980576)),
         new ConstDeclarationNode("AVOGADRO", new ValueNode(6.02214076e23)),
     ];
-
         public static Stack<string> Color { get => color; set => color = value; }
     }
 }

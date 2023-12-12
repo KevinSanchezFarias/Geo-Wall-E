@@ -603,7 +603,7 @@ public class Parser(List<Token> tokens)
                 values.Add(valueNode);
 
                 // Create a constant declaration for each value and add it to the list
-                var constDeclaration = new ConstDeclarationNode(identifier: valueNode.ToString(), value: valueNode);
+                var constDeclaration = new ConstDeclarationNode(identifier: valueNode.ToString()!, value: valueNode);
                 constDeclarations.Add(constDeclaration);
 
                 if (CurrentToken?.Type == TokenType.Comma)

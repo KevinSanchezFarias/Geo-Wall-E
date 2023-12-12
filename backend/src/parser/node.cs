@@ -12,7 +12,6 @@ public class MultipleVariableDeclarationNode(List<VariableDeclarationNode> decla
     public List<VariableDeclarationNode> Declarations { get; } = declarations;
     public Node Body { get; } = body;
 }
-
 public class IdentifierNode(string identifier) : Node
 {
     public string Identifier { get; } = identifier;
@@ -22,7 +21,6 @@ public class ConstDeclarationNode(string identifier, Node value) : Node
     public string Identifier { get; } = identifier;
     public Node Value { get; } = value;
 }
-
 public class BinaryExpressionNode(Node left, string @operator, Node right) : Node
 {
     public Node Left { get; } = left;
@@ -58,7 +56,6 @@ public class PointNode(string name, double X, double Y) : Node
     public double Y { get; } = Y;
 }
 public class EndNode : Node { }
-
 public class ValueNode(object value) : Node
 {
     public object Value { get; } = value;
@@ -70,7 +67,6 @@ public class CircleNode(string name, PointNode cen, Node rad, Node Comment) : No
     public Node Radius { get; } = rad;
     public Node Comment { get; } = Comment;
 }
-
 public class LineNode(string name, PointNode A, PointNode B, Node Comment) : Node
 {
     public string Name { get; } = name;
@@ -78,7 +74,6 @@ public class LineNode(string name, PointNode A, PointNode B, Node Comment) : Nod
     public PointNode B { get; } = B;
     public Node Comment { get; } = Comment;
 }
-
 public class SegmentNode(string name, PointNode A, PointNode B, Node Comment) : Node
 {
     public string Name { get; } = name;
@@ -86,7 +81,6 @@ public class SegmentNode(string name, PointNode A, PointNode B, Node Comment) : 
     public PointNode B { get; } = B;
     public Node Comment { get; } = Comment;
 }
-
 public class RayNode(string name, PointNode p1, PointNode p2, Node comment) : Node
 {
     public string Name { get; } = name;
@@ -95,7 +89,6 @@ public class RayNode(string name, PointNode p1, PointNode p2, Node comment) : No
     public Node Comment { get; } = comment;
 
 }
-
 public class ArcNode(string name, PointNode p1, PointNode p2, PointNode p3, Node comment) : Node
 {
     public string Name { get; } = name;
@@ -114,7 +107,6 @@ public class DrawNode(Node figures) : Node
 {
     public Node Figures { get; } = figures;
 }
-
 public class ReturnToDrawNode(Node figures, string color, List<Node> coords) : Node
 {
     public Node Figures { get; } = figures;

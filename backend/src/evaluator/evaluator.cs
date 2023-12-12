@@ -13,7 +13,6 @@ public struct ToDraw
 }
 public class Evaluator(Node ast)
 {
-
     private Node AST { get; set; } = ast;
     private Dictionary<string, object> variables = [];
 
@@ -52,7 +51,6 @@ public class Evaluator(Node ast)
         };
         return toDraw;
     }
-
     private object Visit(Node node)
     {
         switch (node)
@@ -125,7 +123,6 @@ public class Evaluator(Node ast)
                 }
             }
         }
-
         object ConditionalHandler(IfExpressionNode ifExpressionNode)
         {
             var condition = Visit(ifExpressionNode.Condition);
@@ -138,7 +135,6 @@ public class Evaluator(Node ast)
                 throw new Exception($"Invalid condition type {condition.GetType()}");
             }
         }
-
         object MultipleVarHandler(MultipleVariableDeclarationNode multipleVarDecl)
         {
             foreach (var varDecl in multipleVarDecl.Declarations)
@@ -147,13 +143,11 @@ public class Evaluator(Node ast)
             }
             return Visit(multipleVarDecl.Body);
         }
-
         object VarHandler(VariableDeclarationNode varDecl)
         {
             variables[varDecl.Identifier] = Visit(varDecl.Value);
             return Visit(varDecl.Body);
         }
-
         object IdentifierHandler(IdentifierNode identifierNode)
         {
             if (variables.TryGetValue(identifierNode.Identifier, out var value))
@@ -177,7 +171,6 @@ public class Evaluator(Node ast)
                 throw new Exception($"Undefined variable {identifierNode.Identifier}");
             }
         }
-
         object FunctionPredefinedHandler(FunctionPredefinedNode functionPredefinedNode)
         {
             if (LE.predefinedFunctions.TryGetValue(functionPredefinedNode.Name, out var function))
@@ -190,7 +183,6 @@ public class Evaluator(Node ast)
                 throw new Exception($"Undefined function {functionPredefinedNode.Name}");
             }
         }
-
         object InvokeDeclaredFunctionsHandler(FunctionCallNode functionCallNode)
         {
             // Find the function declaration
@@ -219,17 +211,17 @@ public class Evaluator(Node ast)
 
             return result;
         }
+        object MeasureNodeHandler(MeasureNode measureNode)
+        {
+            if (measureNode.P1 is PointNode pointNodeA && measureNode.P2 is PointNode pointNodeB)
+            {
+                var x = pointNodeA.X - pointNodeB.X;
+                var y = pointNodeA.Y - pointNodeB.Y;
+                return Math.Sqrt((x * x) + (y * y));
+            }
+            throw new Exception($"Invalid measure node {measureNode} passed to measure handler, is it possible to even get here?");
+        }
         #endregion
     }
 
-    private object MeasureNodeHandler(MeasureNode measureNode)
-    {
-        if (measureNode.P1 is PointNode pointNodeA && measureNode.P2 is PointNode pointNodeB)
-        {
-            var x = pointNodeA.X - pointNodeB.X;
-            var y = pointNodeA.Y - pointNodeB.Y;
-            return Math.Sqrt((x * x) + (y * y));
-        }
-        throw new Exception($"Invalid measure node {measureNode} passed to measure handler, is it possible to even get here?");
-    }
 }
