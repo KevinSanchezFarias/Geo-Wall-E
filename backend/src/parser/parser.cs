@@ -3,14 +3,18 @@ using Nodes;
 using Accessibility;
 
 namespace ParserAnalize;
-public class Parser(List<Token> tokens)
+public class Parser
 {
-    private List<Token> Tokens { get; set; } = tokens;
-    public static List<FunctionDeclarationNode> FDN { get => fDN; set => fDN = value; }
-    private static List<FunctionDeclarationNode> fDN = [];
+    private List<Token> Tokens { get; set; }
+    private static List<FunctionDeclarationNode>? fDN = new();
     private int currentTokenIndex = 0;
 
     private Token? CurrentToken => currentTokenIndex < Tokens.Count ? Tokens[currentTokenIndex] : null;
+
+    public Parser(List<Token> tokens)
+    {
+        Tokens = tokens;
+    }
 
     private Token ConsumeToken(TokenType type)
     {
@@ -623,5 +627,7 @@ public class Parser(List<Token> tokens)
             return new EndNode();
         }
     }
+
+    public static List<FunctionDeclarationNode>? FDN { get => fDN; set => fDN = value; }
     #endregion
 }
