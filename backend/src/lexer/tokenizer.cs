@@ -47,6 +47,10 @@ public partial class Lexer
                         LexTokens.Add(new Token(TokenType.Operator, "/", Line, Column));
                         break;
                     }
+                case '%':
+                    Advance();
+                    LexTokens.Add(new Token(TokenType.Operator, "%", Line, Column));
+                    break;
                 case '+':
                     Advance();
                     LexTokens.Add(new Token(TokenType.Operator, "+", Line, Column));
@@ -163,10 +167,6 @@ public partial class Lexer
                         Advance();
                         LexTokens.Add(new Token(TokenType.ComparisonOperator, "<", Line, Column));
                     }
-                    break;
-                case '%':
-                    Advance();
-                    LexTokens.Add(new Token(TokenType.Operator, "%", Line, Column));
                     break;
                 case '^':
                     Advance();

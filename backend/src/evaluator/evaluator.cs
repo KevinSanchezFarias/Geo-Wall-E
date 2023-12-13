@@ -141,6 +141,7 @@ public class Evaluator
                             "-" => leftNum - rightNum,
                             "*" => leftNum * rightNum,
                             "/" => leftNum / rightNum,
+                            "%" => leftNum % rightNum,
                             "^" => Math.Pow(leftNum, rightNum),
                             "<" => leftNum < rightNum,
                             ">" => leftNum > rightNum,

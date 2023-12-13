@@ -36,7 +36,7 @@ namespace Lists
         { "Mode", args => args.GroupBy(x => x).OrderByDescending(x => x.Count()).First().Key },
         { "Range", args => args.Max() - args.Min() },
         { "Fact", args => Enumerable.Range(1, (int)args[0]).Aggregate(1, (p, item) => p * item) },
-        { "Rand", args => new Random().NextDouble() * (args.Length == 1 ? args[0] : args[1] - args[0]) + (args.Length == 1 ? 0 : args[0]) }
+        { "Rand", args => new Random().Next((int)args[0], (int)args[1])}
     };
         public static readonly List<ConstDeclarationNode> cDN = new()
         {

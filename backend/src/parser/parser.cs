@@ -538,12 +538,23 @@ public class Parser
         get
         {
             _ = ConsumeToken(TokenType.LParen);
-            var left = ParseExpression();
+            var left = ParseBinaryExpression();
             var operatorToken = ConsumeToken(TokenType.ComparisonOperator);
             var right = ParseExpression();
             _ = ConsumeToken(TokenType.RParen);
             return new BinaryExpressionNode(left, operatorToken.Value, right);
         }
+    }
+    private Node ParseBinaryExpression()
+    {
+        var left = ParseExpression();
+        if (CurrentToken?.Type == TokenType.Operator)
+        {
+            var operatorToken = ConsumeToken(TokenType.Operator);
+            var right = ParseExpression();
+            return new BinaryExpressionNode(left, operatorToken.Value, right);
+        }
+        return left;
     }
     private Node ParseStringLiteral
     {
