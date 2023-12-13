@@ -15,6 +15,11 @@ public partial class Lexer
                     Line++;
                     Column = 1;
                     continue;
+                case '\n':
+                    Advance();
+                    Line++;
+                    Column = 1;
+                    continue;
                 case char c when char.IsWhiteSpace(c):
                     SkipWhitespace();
                     continue;

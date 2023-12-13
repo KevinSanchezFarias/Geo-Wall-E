@@ -1,6 +1,7 @@
 using Tokens;
 using Nodes;
 using Accessibility;
+using System.Reflection;
 
 namespace ParserAnalize;
 public class Parser
@@ -359,7 +360,27 @@ public class Parser
         {
             _ = ConsumeToken(TokenType.ColorKeyword);
             var name = ConsumeToken(TokenType.Identifier);
-            LE.Color.Push(name.Value);
+
+            // Get the type of the Brushes class
+            var brushesType = typeof(Brushes);
+
+            // Get the property with the given name
+            var brushProperty = brushesType.GetProperty(name.Value, BindingFlags.Public | BindingFlags.Static);
+
+            // Check if the property exists and is of the right type
+            if (brushProperty != null && brushProperty.PropertyType == typeof(Brush))
+            {
+                // The name coincides with a brush color
+                var brush = brushProperty.GetValue(null) as Brush;
+                // Use the brush...
+                LE.Color.Push(brush!);
+            }
+            else
+            {
+                // The name doesn't coincide with a brush color
+                throw new Exception($"Undefined color {name.Value} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
+            }
+
             return new EndNode();
         }
     }
@@ -368,7 +389,7 @@ public class Parser
         get
         {
             _ = ConsumeToken(TokenType.RestoreKeyword);
-            LE.Color.Pop();
+            if (LE.Color.Count > 1) { LE.Color.Pop(); }
             return new EndNode();
         }
     }
@@ -512,8 +533,8 @@ public class Parser
         {
             _ = ConsumeToken(TokenType.Point);
             var name = ConsumeToken(TokenType.Identifier);
-            var x = new Random().Next(0, 100);
-            var y = new Random().Next(0, 100);
+            var x = new Random().Next(0, 15);
+            var y = new Random().Next(0, 15);
             LE.poiND.Add(new PointNode(name.Value, x, y));
 
             return new EndNode();

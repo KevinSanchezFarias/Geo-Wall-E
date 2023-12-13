@@ -6,7 +6,7 @@ namespace EvaluatorAnalize;
 public struct ToDraw
 {
     public string figure;
-    public string color;
+    public Brush color;
     public Point[] points;
     public double rad;
     public string comment;
@@ -35,7 +35,7 @@ public class Evaluator
             {
                 if (figure is CircleNode cNode)
                 {
-                    var points = new List<Point> { new Point((int)cNode.Center.X, (int)cNode.Center.Y) };
+                    var points = new List<Point> { new((int)cNode.Center.X, (int)cNode.Center.Y) };
                     var comment = cNode.Comment as ValueNode;
                     var toDraw = new ToDraw
                     {

@@ -9,7 +9,7 @@ public class Interpreter
     {
         List<ToDraw> toDraws = new();
         // Split the string into lines
-        var lines = input.Split(";\r", StringSplitOptions.RemoveEmptyEntries);
+        var lines = input.Split(new[] { ";\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
         foreach (var line in lines)
         {
             try

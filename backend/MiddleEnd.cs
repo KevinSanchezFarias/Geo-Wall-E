@@ -1,10 +1,13 @@
 ﻿using InterpreterAnalizer;
 
-static class MiddleEnd
+namespace WaLI.backend
 {
-    public static object GSharp(string input)
+    public static class MiddleEnd
     {
-        _ = new Interpreter();
-        return Interpreter.Interpret(input)!;
+        public static object GSharp(string input)
+        {
+            _ = new Interpreter();
+            return Interpreter.Interpret(input)!;
+        }
     }
 }
