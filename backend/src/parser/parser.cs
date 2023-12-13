@@ -606,6 +606,10 @@ public class Parser
             {
                 valueNode = ParseSequence(names[0].Value);
             }
+            else if (CurrentToken?.Type == TokenType.IntersectKeyword)
+            {
+                return ParseIntersect(names[0].Value);
+            }
             else
             {
                 valueNode = ParseExpression();
@@ -631,7 +635,7 @@ public class Parser
             }
             else
             {
-                LE.cDN.Insert(0, new ConstDeclarationNode(names[0].Value, valueNode));
+                return new ConstDeclarationNode(names[0].Value, valueNode);
             }
 
             return new EndNode();
@@ -646,7 +650,15 @@ public class Parser
 
         while (CurrentToken?.Type != TokenType.RBrace)
         {
-            var valueNode = ParseExpression();
+            Node valueNode;
+            if (CurrentToken?.Type == TokenType.IntersectKeyword)
+            {
+                return null!;
+            }
+            else
+            {
+                valueNode = ParseExpression();
+            }
             values.Add(valueNode);
 
             // Create a constant declaration for each value and add it to the list
@@ -668,6 +680,30 @@ public class Parser
         // Create a unique identifier for the sequence
         LE.Seqs.Add(new SequenceNode(values, name));
         return new EndNode();
+    }
+    private Node ParseIntersect(string name)
+    {
+
+        _ = ConsumeToken(TokenType.IntersectKeyword);
+        if (CurrentToken?.Type != TokenType.LParen)
+        {
+            throw new Exception($"Expected token {TokenType.LParen}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}  ");
+        }
+        _ = ConsumeToken(TokenType.LParen);
+        var figure1 = ParseExpression();
+        if (CurrentToken?.Type != TokenType.Comma)
+        {
+            throw new Exception($"Expected token {TokenType.Comma}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}  ");
+        }
+        _ = ConsumeToken(TokenType.Comma);
+        var figure2 = ParseExpression();
+        //ADDDDDDD IFFFFFFFFFFFF TOOOOOOOO
+        if (CurrentToken?.Type != TokenType.RParen)
+        {
+            throw new Exception($"Expected token {TokenType.RParen}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}  ");
+        }
+        _ = ConsumeToken(TokenType.RParen);
+        return new IntersectNode(name, figure1, figure2, new List<PointNode>());
 
     }
 

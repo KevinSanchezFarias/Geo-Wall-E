@@ -32,7 +32,8 @@ public enum TokenType
     EOF,
     Figure,
     ColorKeyword,
-    RestoreKeyword
+    RestoreKeyword,
+    IntersectKeyword
 }
 /// <summary>
 /// Represents a token in the program.

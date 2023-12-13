@@ -122,6 +122,7 @@ public partial class Lexer
         }
         return result switch
         {
+            "intersect" => new Token(TokenType.IntersectKeyword, result, Line, Column),
             "draw" => new Token(TokenType.DrawKeyword, result, Line, Column),
             "measure" => new Token(TokenType.MeasureKeyword, result, Line, Column),
             "point" => new Token(TokenType.Point, result, Line, Column),
