@@ -55,31 +55,44 @@ public partial class Form1 : Form
     private void SubmitCommands(object sender, EventArgs e)
     {
         Graphics canvas = panel.CreateGraphics();
-        foreach (ToDraw graphic in (List<ToDraw>)MiddleEnd.GSharp(textBox1.Text))
+        var graphics = MiddleEnd.GSharp(textBox1.Text);
+
+        if (graphics is string errorMessage)
         {
-            switch (graphic.figure)
+            MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        else if (graphics is List<ToDraw> toDrawList)
+        {
+            foreach (ToDraw graphic in toDrawList)
             {
-                case "PointNode":
-                    { Draw_Point(graphic.color, graphic.points[0], graphic.comment, canvas); }
-                    break;
-                case "LineNode":
-                    { Draw_Line(graphic.color, graphic.points, graphic.comment, canvas); }
-                    break;
-                case "SegmentNode":
-                    { Draw_Segment(graphic.color, graphic.points, graphic.comment, canvas); }
-                    break;
-                case "RayNode":
-                    { Draw_Ray(graphic.color, graphic.points, graphic.comment, canvas); }
-                    break;
-                case "ArcNode":
-                    { Draw_Arc(graphic.color, graphic.points, graphic.comment, canvas); }
-                    break;
-                case "CircleNode":
-                    { Draw_Circle(graphic.color, graphic.points[0], graphic.rad, graphic.comment, canvas); }
-                    break;
-                default:
-                    { continue; }
+                switch (graphic.figure)
+                {
+                    case "PointNode":
+                        Draw_Point(graphic.color, graphic.points[0], graphic.comment, canvas);
+                        break;
+                    case "LineNode":
+                        Draw_Line(graphic.color, graphic.points, graphic.comment, canvas);
+                        break;
+                    case "SegmentNode":
+                        Draw_Segment(graphic.color, graphic.points, graphic.comment, canvas);
+                        break;
+                    case "RayNode":
+                        Draw_Ray(graphic.color, graphic.points, graphic.comment, canvas);
+                        break;
+                    case "ArcNode":
+                        Draw_Arc(graphic.color, graphic.points, graphic.comment, canvas);
+                        break;
+                    case "CircleNode":
+                        Draw_Circle(graphic.color, graphic.points[0], graphic.rad, graphic.comment, canvas);
+                        break;
+                    default:
+                        continue;
+                }
             }
+        }
+        else
+        {
+            MessageBox.Show("Could not graph", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 
@@ -185,6 +198,6 @@ public partial class Form1 : Form
         float m = Pendiente(p1, p2);
         float n = p1.Y - m * p1.X;
         float cero = -n / m;
-        return null!;// 0,n y cero,0
+        return new Point[] { new(0, (int)n), new((int)cero, 0) };
     }
 }

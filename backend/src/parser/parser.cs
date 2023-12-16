@@ -533,8 +533,8 @@ public class Parser
         {
             _ = ConsumeToken(TokenType.Point);
             var name = ConsumeToken(TokenType.Identifier);
-            var x = new Random().Next(0, 15);
-            var y = new Random().Next(0, 15);
+            var x = new Random().Next(150, 250);
+            var y = new Random().Next(150, 250);
             LE.poiND.Add(new PointNode(name.Value, x, y));
 
             return new EndNode();
