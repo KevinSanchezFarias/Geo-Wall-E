@@ -1,4 +1,3 @@
-global using Lists;
 using Nodes;
 
 namespace Lists

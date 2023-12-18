@@ -1,5 +1,6 @@
 using Nodes;
 using ParserAnalize;
+using Lists;
 
 namespace EvaluatorAnalize;
 
@@ -26,6 +27,11 @@ public class Evaluator
     {
         return Visit(AST);
     }
+    /// <summary>
+    /// Draws the specified <see cref="DrawNode"/> and returns a list of <see cref="ToDraw"/> objects.
+    /// </summary>
+    /// <param name="node">The <see cref="DrawNode"/> to be drawn.</param>
+    /// <returns>A list of <see cref="ToDraw"/> objects representing the figures to be drawn.</returns>
     public object Draw(DrawNode node)
     {
         if (node.Figures is SequenceNode sequenceNode)
@@ -33,19 +39,28 @@ public class Evaluator
             var toDrawList = new List<ToDraw>();
             foreach (var figure in sequenceNode.Nodes)
             {
-                if (figure is CircleNode cNode)
+                switch (figure)
                 {
-                    var points = new List<Point> { new((int)cNode.Center.X, (int)cNode.Center.Y) };
-                    var comment = cNode.Comment as ValueNode;
-                    var toDraw = new ToDraw
-                    {
-                        color = LE.Color.First(),
-                        figure = cNode.GetType().Name,
-                        points = points.ToArray(),
-                        rad = (double)Visit(cNode.Radius),
-                        comment = comment?.Value.ToString() ?? ""
-                    };
-                    toDrawList.Add(toDraw);
+                    case CircleNode cNode:
+                        BuildCircleNode(toDrawList, cNode);
+                        break;
+                    case LineNode lineNode:
+                        BuildLineNode(toDrawList, lineNode);
+                        break;
+                    case SegmentNode segmentNode:
+                        BuildSegmentNode(toDrawList, segmentNode);
+                        break;
+                    case RayNode rayNode:
+                        BuildRayNode(toDrawList, rayNode);
+                        break;
+                    case ArcNode arcNode:
+                        BuildArcNode(toDrawList, arcNode);
+                        break;
+                    case PointNode pointNode:
+                        BuildPointNode(toDrawList, pointNode);
+                        break;
+                    default:
+                        throw new Exception($"Unexpected node type {figure.GetType()}");
                 }
             }
             return toDrawList;
@@ -81,6 +96,88 @@ public class Evaluator
             };
             return toDraw;
         }
+        #region BuildFinalNodes
+        void BuildCircleNode(List<ToDraw> toDrawList, CircleNode cNode)
+        {
+            var points = new List<Point> { new((int)cNode.Center.X, (int)cNode.Center.Y) };
+            var comment = cNode.Comment as ValueNode;
+            var toDraw = new ToDraw
+            {
+                color = LE.Color.First(),
+                figure = cNode.GetType().Name,
+                points = points.ToArray(),
+                rad = (double)Visit(cNode.Radius),
+                comment = comment?.Value.ToString() ?? ""
+            };
+            toDrawList.Add(toDraw);
+        }
+        void BuildLineNode(List<ToDraw> toDrawList, LineNode lineNode)
+        {
+            var points = new List<Point> { new((int)lineNode.A.X, (int)lineNode.A.Y), new((int)lineNode.B.X, (int)lineNode.B.Y) };
+            var comment = lineNode.Comment as ValueNode;
+            var toDraw = new ToDraw
+            {
+                color = LE.Color.First(),
+                figure = lineNode.GetType().Name,
+                points = points.ToArray(),
+                rad = 0,
+                comment = comment?.Value.ToString() ?? ""
+            };
+            toDrawList.Add(toDraw);
+        }
+        void BuildSegmentNode(List<ToDraw> toDrawList, SegmentNode segmentNode)
+        {
+            var points = new List<Point> { new((int)segmentNode.A.X, (int)segmentNode.A.Y), new((int)segmentNode.B.X, (int)segmentNode.B.Y) };
+            var comment = segmentNode.Comment as ValueNode;
+            var toDraw = new ToDraw
+            {
+                color = LE.Color.First(),
+                figure = segmentNode.GetType().Name,
+                points = points.ToArray(),
+                rad = 0,
+                comment = comment?.Value.ToString() ?? ""
+            };
+            toDrawList.Add(toDraw);
+        }
+        void BuildRayNode(List<ToDraw> toDrawList, RayNode rayNode)
+        {
+            var points = new List<Point> { new((int)rayNode.P1.X, (int)rayNode.P1.Y), new((int)rayNode.P2.X, (int)rayNode.P2.Y) };
+            var comment = rayNode.Comment as ValueNode;
+            var toDraw = new ToDraw
+            {
+                color = LE.Color.First(),
+                figure = rayNode.GetType().Name,
+                points = points.ToArray(),
+                rad = 0,
+                comment = comment?.Value.ToString() ?? ""
+            };
+            toDrawList.Add(toDraw);
+        }
+        void BuildArcNode(List<ToDraw> toDrawList, ArcNode arcNode)
+        {
+            var points = new List<Point> { new((int)arcNode.P1.X, (int)arcNode.P1.Y), new((int)arcNode.P2.X, (int)arcNode.P2.Y), new((int)arcNode.P3.X, (int)arcNode.P3.Y) };
+            var comment = arcNode.Comment as ValueNode;
+            var toDraw = new ToDraw
+            {
+                color = LE.Color.First(),
+                figure = arcNode.GetType().Name,
+                points = points.ToArray(),
+            };
+            toDrawList.Add(toDraw);
+        }
+        void BuildPointNode(List<ToDraw> toDrawList, PointNode pointNode)
+        {
+            var points = new List<Point> { new((int)pointNode.X, (int)pointNode.Y) };
+            var toDraw = new ToDraw
+            {
+                color = LE.Color.First(),
+                figure = pointNode.GetType().Name,
+                points = points.ToArray(),
+                rad = 0,
+            };
+            toDrawList.Add(toDraw);
+        }
+        #endregion
     }
     private object Visit(Node node)
     {
@@ -102,8 +199,6 @@ public class Evaluator
                 return FunctionPredefinedHandler(functionPredefinedNode);
             case MeasureNode measureNode:
                 return MeasureNodeHandler(measureNode);
-            /* case IntersectNode intersectNode:
-                return IntersectHandler(intersectNode); */
             case BinaryExpressionNode binaryExpressionNode:
                 return BinaryHandler(binaryExpressionNode);
             case IfExpressionNode ifExpressionNode:
@@ -275,7 +370,6 @@ public class Evaluator
         LE.Seqs.Add(sequenceNode);
         return null!;
     }
-
     private IEnumerable<PointNode> EvaluateIntersection(Node figure1, Node figure2)
     {
         var intersectionPoints = new List<PointNode>();
@@ -565,7 +659,6 @@ public class Evaluator
         #endregion
         return intersectionPoints;
     }
-
     private object ConstDeclarationNodeHandler(ConstDeclarationNode constDeclarationNode)
     {
         if (constDeclarationNode.Value is ValueNode valueNode)

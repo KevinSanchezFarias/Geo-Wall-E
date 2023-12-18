@@ -1,7 +1,7 @@
 using Tokens;
 using Nodes;
-using Accessibility;
 using System.Reflection;
+using Lists;
 
 namespace ParserAnalize;
 public class Parser
@@ -280,7 +280,7 @@ public class Parser
             }
 
             _ = ConsumeToken(TokenType.LParen);
-            var p1 = (PointNode)ParseExpression();
+            var p1 = ParseExpression();
             if (p1 is not PointNode)
             {
                 throw new Exception($"Expected token {TokenType.Point}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
@@ -292,7 +292,7 @@ public class Parser
             }
 
             _ = ConsumeToken(TokenType.Comma);
-            var p2 = (PointNode)ParseExpression();
+            var p2 = ParseExpression();
             if (p2 is not PointNode)
             {
                 throw new Exception($"Expected token {TokenType.Point}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
@@ -305,7 +305,7 @@ public class Parser
                 comment = ParseStringLiteral;
             }
 
-            LE.segND.Add(new SegmentNode(name.Value, p1, p2, (Node)comment));
+            LE.segND.Add(new SegmentNode(name.Value, (PointNode)p1, (PointNode)p2, (Node)comment));
             return new EndNode();
 
         }
@@ -325,7 +325,7 @@ public class Parser
             }
 
             _ = ConsumeToken(TokenType.LParen);
-            var p1 = (PointNode)ParseExpression();
+            var p1 = ParseExpression();
             if (p1 is not PointNode)
             {
                 throw new Exception($"Expected token {TokenType.Point}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
@@ -337,7 +337,7 @@ public class Parser
             }
 
             _ = ConsumeToken(TokenType.Comma);
-            var p2 = (PointNode)ParseExpression();
+            var p2 = ParseExpression();
             if (p2 is not PointNode)
             {
                 throw new Exception($"Expected token {TokenType.Point}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
@@ -350,7 +350,7 @@ public class Parser
                 comment = ParseStringLiteral;
             }
 
-            LE.linND.Add(new LineNode(name.Value, p1, p2, (Node)comment));
+            LE.linND.Add(new LineNode(name.Value, (PointNode)p1, (PointNode)p2, (Node)comment));
             return new EndNode();
         }
     }
@@ -638,19 +638,40 @@ public class Parser
 
             if (valueNode is SequenceNode sequenceNode)
             {
-                for (int i = 0; i < names.Count; i++)
+                if (sequenceNode is null)
                 {
-                    // Only create a ConstDeclarationNode if it's not the last identifier or if there are no remaining nodes
-                    if (i < sequenceNode.Nodes.Count && (i != names.Count - 1 || i >= sequenceNode.Nodes.Count - 1))
-                    {
-                        LE.cDN.Insert(0, new ConstDeclarationNode(names[i].Value, sequenceNode.Nodes[i]));
-                    }
+                    throw new Exception("Sequence Null");
 
-                    // When we reach the last identifier and there are remaining nodes, create a new sequence with the remaining nodes
-                    if (i == names.Count - 1 && i < sequenceNode.Nodes.Count - 1)
+                }
+                else
+                {
+                    for (int i = 0; i < names.Count; i++)
                     {
-                        var remainingNodes = sequenceNode.Nodes.Skip(i).ToList();
-                        LE.cDN.Insert(0, new ConstDeclarationNode(names[i].Value, new SequenceNode(remainingNodes, names[i].Value)));
+                        // Only create a ConstDeclarationNode if it's not the last identifier or if there are no remaining nodes
+                        if (i < sequenceNode.Nodes.Count && (i != names.Count - 1 || i >= sequenceNode.Nodes.Count - 1))
+                        {
+                            if (sequenceNode.Nodes[i] is PointNode pd)
+                            {
+                                LE.poiND.Add(new PointNode(names[i].Value, pd.X, pd.Y));
+                            }
+                            else
+                            {
+                                LE.cDN.Insert(0, new ConstDeclarationNode(names[i].Value, sequenceNode.Nodes[i]));
+                            }
+                        }
+
+                        // When we reach the last identifier and there are remaining nodes, create a new sequence with the remaining nodes
+                        if (i == names.Count - 1 && i < sequenceNode.Nodes.Count - 1)
+                        {
+                            // If the last identifier is "_", treat it as a void space and create nothing
+                            if (names[i].Value == "_")
+                            {
+                                continue;
+                            }
+
+                            var remainingNodes = sequenceNode.Nodes.Skip(i).ToList();
+                            LE.cDN.Insert(0, new ConstDeclarationNode(names[i].Value, new SequenceNode(remainingNodes, names[i].Value)));
+                        }
                     }
                 }
             }
@@ -668,6 +689,7 @@ public class Parser
 
         var values = new List<Node>();
         var constDeclarations = new List<ConstDeclarationNode>();
+        Node firstValue = null!;
 
         while (CurrentToken?.Type != TokenType.RBrace)
         {
@@ -679,6 +701,16 @@ public class Parser
             else
             {
                 valueNode = ParseExpression();
+            }
+            // If this is the first value, store it for later comparison
+            if (firstValue == null)
+            {
+                firstValue = valueNode;
+            }
+            // If this value is not the same as the first value, throw an exception
+            else if (valueNode.GetType() != firstValue.GetType())
+            {
+                throw new Exception($"All values in a sequence must be the same. Found {valueNode} that is not the same as the first value {firstValue}.");
             }
             values.Add(valueNode);
 
@@ -704,28 +736,13 @@ public class Parser
     }
     private Node ParseIntersect(string name)
     {
-
         _ = ConsumeToken(TokenType.IntersectKeyword);
-        if (CurrentToken?.Type != TokenType.LParen)
-        {
-            throw new Exception($"Expected token {TokenType.LParen}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}  ");
-        }
         _ = ConsumeToken(TokenType.LParen);
         var figure1 = ParseExpression();
-        if (CurrentToken?.Type != TokenType.Comma)
-        {
-            throw new Exception($"Expected token {TokenType.Comma}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}  ");
-        }
         _ = ConsumeToken(TokenType.Comma);
         var figure2 = ParseExpression();
-        //ADDDDDDD IFFFFFFFFFFFF TOOOOOOOO
-        if (CurrentToken?.Type != TokenType.RParen)
-        {
-            throw new Exception($"Expected token {TokenType.RParen}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}  ");
-        }
         _ = ConsumeToken(TokenType.RParen);
         return new IntersectNode(name, figure1, figure2, new List<PointNode>());
-
     }
 
     public static List<FunctionDeclarationNode> FDN { get => fDN; set => fDN = value; }

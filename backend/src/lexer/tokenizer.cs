@@ -181,6 +181,10 @@ public partial class Lexer
                     Advance();
                     LexTokens.Add(new Token(TokenType.Operator, ".", Line, Column));
                     break;
+                case '_':
+                    Advance();
+                    LexTokens.Add(new Token(TokenType.Identifier, "_", Line, Column));
+                    break;
                 default:
                     throw new Exception($"Invalid character {CurrentChar} at line {Line} and column {Column}");
             }

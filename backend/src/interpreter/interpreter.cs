@@ -1,6 +1,7 @@
 using LexerAnalize;
 using ParserAnalize;
 using EvaluatorAnalize;
+using Lists;
 
 namespace InterpreterAnalizer;
 public class Interpreter
@@ -10,6 +11,7 @@ public class Interpreter
         List<ToDraw> toDraws = new();
         // Split the string into lines
         var lines = input.Split(new[] { ";\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+        CleanFigs();
         foreach (var line in lines)
         {
             try
@@ -34,4 +36,7 @@ public class Interpreter
         }
         return toDraws;
     }
+
+    /*Minified*/
+    private static void CleanFigs() { LE.arcND.Clear(); LE.cirND.Clear(); LE.linND.Clear(); LE.poiND.Clear(); LE.rayND.Clear(); LE.segND.Clear(); LE.Seqs.Clear(); LE.Color.Clear(); LE.Color.Push(Brushes.Black); }
 }
