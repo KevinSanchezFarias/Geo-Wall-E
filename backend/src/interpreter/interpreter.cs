@@ -6,6 +6,11 @@ using Lists;
 namespace InterpreterAnalizer;
 public class Interpreter
 {
+    /// <summary>
+    /// Interprets the input string and returns a list of objects to draw.
+    /// </summary>
+    /// <param name="input">The input string to interpret.</param>
+    /// <returns>A list of objects to draw.</returns>
     public static object Interpret(string input)
     {
         List<ToDraw> toDraws = new();

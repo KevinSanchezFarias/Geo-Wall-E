@@ -12,11 +12,18 @@ public class Parser
 
     private Token? CurrentToken => currentTokenIndex < Tokens.Count ? Tokens[currentTokenIndex] : null;
 
+    /// <summary>
+    /// Represents a parser that processes a list of tokens.
+    /// </summary>
+    /// <param name="tokens">The list of tokens to be processed.</param>
     public Parser(List<Token> tokens)
     {
         Tokens = tokens;
     }
 
+    /// <summary>
+    /// Consume a token in the parser.
+    /// </summary>
     private Token ConsumeToken(TokenType type)
     {
         return CurrentToken?.Type == type
@@ -24,6 +31,10 @@ public class Parser
             : throw new Exception($"Expected token {type}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
     }
     #region RecursiveDescentParser
+    /// <summary>
+    /// Represents a node in the parse tree.
+    /// </summary>
+    /// <returns>The parsed node.</returns>
     public Node Parse()
     {
         return ParseExpression();

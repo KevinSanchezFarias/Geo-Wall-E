@@ -1,4 +1,7 @@
 namespace Tokens;
+/// <summary>
+/// Represents the different types of tokens in the program.
+/// </summary>
 public enum TokenType
 {
     Const,
@@ -49,6 +52,13 @@ public class Token
     public int Line { get; set; }
     public int Column { get; set; }
 
+    /// <summary>
+    /// Represents a token in the program.
+    /// </summary>
+    /// <param name="type">The type of the token.</param>
+    /// <param name="value">The value of the token.</param>
+    /// <param name="line">The line number where the token appears.</param>
+    /// <param name="column">The column number where the token appears.</param>
     public Token(TokenType type, string value, int line, int column)
     {
         Type = type;
