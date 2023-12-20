@@ -178,8 +178,19 @@ public partial class Lexer
                     LexTokens.Add(new Token(TokenType.Operator, "^", Line, Column));
                     break;
                 case '.':
-                    Advance();
-                    LexTokens.Add(new Token(TokenType.Operator, ".", Line, Column));
+                    if (Peek() == '.' && Peek2() == '.')
+                    {
+                        // Consume the next two characters
+                        Advance();
+                        Advance();
+                        Advance();
+                        LexTokens.Add(new Token(TokenType.DotDotDot, "...", Line, Column));
+                    }
+                    else
+                    {
+                        Advance();
+                        LexTokens.Add(new Token(TokenType.Operator, ".", Line, Column));
+                    }
                     break;
                 case '_':
                     Advance();

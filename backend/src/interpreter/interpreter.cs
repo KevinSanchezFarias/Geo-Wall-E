@@ -13,9 +13,10 @@ public class Interpreter
     /// <returns>A list of objects to draw.</returns>
     public static object Interpret(string input)
     {
+        short lineX = 0;
         List<ToDraw> toDraws = new();
         // Split the string into lines
-        var lines = input.Split(new[] { ";\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+        var lines = input.Split(new[] { ";\r" }, StringSplitOptions.RemoveEmptyEntries);
         CleanFigs();
         foreach (var line in lines)
         {
@@ -25,6 +26,7 @@ public class Interpreter
                 var parser = new Parser(lexer.LexTokens);
                 var evaluator = new Evaluator(parser.Parse());
                 object? lineResult = evaluator.Evaluate();
+                lineX++;
                 if (lineResult is not null)
                 {
                     if (lineResult is ToDraw draw)
@@ -37,7 +39,7 @@ public class Interpreter
                     }
                 }
             }
-            catch (Exception e) { return e.Message; }
+            catch (Exception e) { return $"In {lineX}: {e.Message}"; }
         }
         return toDraws;
     }

@@ -699,7 +699,6 @@ public class Parser
         _ = ConsumeToken(TokenType.LBrace);
 
         var values = new List<Node>();
-        var constDeclarations = new List<ConstDeclarationNode>();
         Node firstValue = null!;
 
         while (CurrentToken?.Type != TokenType.RBrace)
@@ -709,33 +708,56 @@ public class Parser
             {
                 return null!;
             }
+            else if (CurrentToken?.Type == TokenType.DotDotDot)
+            {
+                // Handle the "..." syntax
+                _ = ConsumeToken(TokenType.DotDotDot);
+                if (CurrentToken?.Type == TokenType.RBrace)
+                {
+                    // If there's nothing after the "...", generate an infinite sequence of natural numbers
+                    // This shit down here is a fvcking monster
+                    // values.Add(new InfiniteSequenceNode(InfiniteSequence(1), name));
+                    Task.Run(() =>
+                    {
+                        // If there's nothing after the "...", generate an infinite sequence of natural numbers
+                        for (int i = 1; i < 2000000000; i++)
+                        {
+                            values.Add(new ValueNode(i));
+                        }
+                        //
+                        values.RemoveAt(0);
+                        MessageBox.Show($"YOU HAVE TO STOP THIS PLEASE!, THE SEQUENCE \"{name}\" HAS MORE THAN 2 BILLIONS OF NUMBERS! column {CurrentToken?.Column} btw");
+                    });
+                }
+                else
+                {
+                    // If there's a number after the "...", generate a sequence of numbers up to that number
+                    int end = int.Parse(ConsumeToken(TokenType.Number).Value);
+                    for (double i = (double)((ValueNode)firstValue).Value; i <= end; i++)
+                    {
+                        values.Add(new ValueNode(i));
+                    }
+                    values.RemoveAt(0);
+                }
+                break;
+            }
             else
             {
                 valueNode = ParseExpression();
             }
-            // If this is the first value, store it for later comparison
-            if (firstValue == null)
-            {
-                firstValue = valueNode;
-            }
-            // If this value is not the same as the first value, throw an exception
-            else if (valueNode.GetType() != firstValue.GetType())
-            {
-                throw new Exception($"All values in a sequence must be the same. Found {valueNode} that is not the same as the first value {firstValue}.");
-            }
-            values.Add(valueNode);
 
-            // Create a constant declaration for each value and add it to the list
-            var constDeclaration = new ConstDeclarationNode(identifier: valueNode.ToString()!, value: valueNode);
-            constDeclarations.Add(constDeclaration);
+            // If this is the first value, store it for later comparison
+            firstValue ??= valueNode;
+
+            values.Add(valueNode);
 
             if (CurrentToken?.Type == TokenType.Comma)
             {
                 _ = ConsumeToken(TokenType.Comma);
             }
-            else if (CurrentToken?.Type != TokenType.RBrace)
+            else if (CurrentToken?.Type != TokenType.RBrace && CurrentToken?.Type != TokenType.DotDotDot)
             {
-                throw new Exception("Expected ',' or '}'");
+                throw new Exception($"Expected ',' or '}}' or '...' at column {CurrentToken?.Column}");
             }
         }
 
@@ -745,6 +767,16 @@ public class Parser
         LE.Seqs.Add(new SequenceNode(values, name));
         return new EndNode();
     }
+
+    public static IEnumerable<double> InfiniteSequence(double start = 1)
+    {
+        double i = start;
+        while (true)
+        {
+            yield return i++;
+        }
+    }
+
     private Node ParseIntersect(string name)
     {
         _ = ConsumeToken(TokenType.IntersectKeyword);

@@ -18,7 +18,6 @@ public partial class Lexer
         CurrentChar = input[Position];
         Tokenize();
     }
-
     private Token StringLiteral()
     {
         string result = "";
@@ -35,7 +34,6 @@ public partial class Lexer
         Advance(); // Consume the second '"' to advance to the next token
         return new Token(TokenType.StringLiteral, result, Line, Column);
     }
-
     private void DeclareFunction()
     {
         LexTokens.Add(new Token(TokenType.FunctionKeyword, "function", Line, Column));
@@ -84,7 +82,6 @@ public partial class Lexer
         SkipWhitespace();
         Tokenize();
     }
-
     private Token Number()
     {
         string result = "";
@@ -111,7 +108,6 @@ public partial class Lexer
         // Return the number token
         return new Token(TokenType.Number, result, Line, Column);
     }
-
     private Token Keyword()
     {
         string result = "";
@@ -178,6 +174,16 @@ public partial class Lexer
     public char Peek()
     {
         var peek_pos = Position + 1;
+        return peek_pos >= Text.Length ? '\0' : Text[peek_pos];
+    }
+    /// <summary>
+    /// Returns the character at the position two steps ahead of the current position.
+    /// If the position is out of range, returns '\0'.
+    /// </summary>
+    /// <returns>The character at the position two steps ahead of the current position, or '\0' if out of range.</returns>
+    public char Peek2()
+    {
+        var peek_pos = Position + 2;
         return peek_pos >= Text.Length ? '\0' : Text[peek_pos];
     }
 }

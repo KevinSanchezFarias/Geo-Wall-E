@@ -22,7 +22,7 @@ public struct ToDraw
     /// <summary>
     /// The array of points that define the figure.
     /// </summary>
-    public Point[] points;
+    public PointF[] points;
 
     /// <summary>
     /// The radius of the figure (if applicable).
@@ -105,12 +105,12 @@ public class Evaluator
         {
             var points = node.Figures switch
             {
-                PointNode pointNode => new() { new Point((int)pointNode.X, (int)pointNode.Y) },
-                CircleNode cNode => new() { new Point((int)cNode.Center.X, (int)cNode.Center.Y) },
-                LineNode lineNode => new() { new Point((int)lineNode.A.X, (int)lineNode.A.Y), new Point((int)lineNode.B.X, (int)lineNode.B.Y) },
-                SegmentNode segmentNode => new() { new Point((int)segmentNode.A.X, (int)segmentNode.A.Y), new Point((int)segmentNode.B.X, (int)segmentNode.B.Y) },
-                RayNode rayNode => new() { new Point((int)rayNode.P1.X, (int)rayNode.P1.Y), new Point((int)rayNode.P2.X, (int)rayNode.P2.Y) },
-                ArcNode arcNode => new List<Point> { new((int)arcNode.P1.X, (int)arcNode.P1.Y), new((int)arcNode.P2.X, (int)arcNode.P2.Y), new((int)arcNode.P3.X, (int)arcNode.P3.Y) },
+                PointNode pointNode => new() { new PointF((float)pointNode.X, (float)pointNode.Y) },
+                CircleNode cNode => new() { new PointF((float)cNode.Center.X, (float)cNode.Center.Y) },
+                LineNode lineNode => new() { new PointF((float)lineNode.A.X, (float)lineNode.A.Y), new PointF((float)lineNode.B.X, (float)lineNode.B.Y) },
+                SegmentNode segmentNode => new() { new PointF((float)segmentNode.A.X, (float)segmentNode.A.Y), new PointF((float)segmentNode.B.X, (int)segmentNode.B.Y) },
+                RayNode rayNode => new() { new PointF((float)rayNode.P1.X, (float)rayNode.P1.Y), new PointF((float)rayNode.P2.X, (float)rayNode.P2.Y) },
+                ArcNode arcNode => new List<PointF> { new((float)arcNode.P1.X, (float)arcNode.P1.Y), new((float)arcNode.P2.X, (float)arcNode.P2.Y), new((float)arcNode.P3.X, (float)arcNode.P3.Y) },
                 _ => throw new Exception($"Unexpected node type {node.Figures.GetType()}")
             };
             var comment = node.Figures switch
@@ -135,7 +135,7 @@ public class Evaluator
         #region BuildFinalNodes
         void BuildCircleNode(List<ToDraw> toDrawList, CircleNode cNode)
         {
-            var points = new List<Point> { new((int)cNode.Center.X, (int)cNode.Center.Y) };
+            var points = new List<PointF> { new((float)cNode.Center.X, (float)cNode.Center.Y) };
             var comment = cNode.Comment as ValueNode;
             var toDraw = new ToDraw
             {
@@ -149,7 +149,7 @@ public class Evaluator
         }
         void BuildLineNode(List<ToDraw> toDrawList, LineNode lineNode)
         {
-            var points = new List<Point> { new((int)lineNode.A.X, (int)lineNode.A.Y), new((int)lineNode.B.X, (int)lineNode.B.Y) };
+            var points = new List<PointF> { new((int)lineNode.A.X, (int)lineNode.A.Y), new((int)lineNode.B.X, (int)lineNode.B.Y) };
             var comment = lineNode.Comment as ValueNode;
             var toDraw = new ToDraw
             {
@@ -163,7 +163,7 @@ public class Evaluator
         }
         void BuildSegmentNode(List<ToDraw> toDrawList, SegmentNode segmentNode)
         {
-            var points = new List<Point> { new((int)segmentNode.A.X, (int)segmentNode.A.Y), new((int)segmentNode.B.X, (int)segmentNode.B.Y) };
+            var points = new List<PointF> { new((int)segmentNode.A.X, (int)segmentNode.A.Y), new((int)segmentNode.B.X, (int)segmentNode.B.Y) };
             var comment = segmentNode.Comment as ValueNode;
             var toDraw = new ToDraw
             {
@@ -177,7 +177,7 @@ public class Evaluator
         }
         void BuildRayNode(List<ToDraw> toDrawList, RayNode rayNode)
         {
-            var points = new List<Point> { new((int)rayNode.P1.X, (int)rayNode.P1.Y), new((int)rayNode.P2.X, (int)rayNode.P2.Y) };
+            var points = new List<PointF> { new((int)rayNode.P1.X, (int)rayNode.P1.Y), new((int)rayNode.P2.X, (int)rayNode.P2.Y) };
             var comment = rayNode.Comment as ValueNode;
             var toDraw = new ToDraw
             {
@@ -191,7 +191,7 @@ public class Evaluator
         }
         void BuildArcNode(List<ToDraw> toDrawList, ArcNode arcNode)
         {
-            var points = new List<Point> { new((int)arcNode.P1.X, (int)arcNode.P1.Y), new((int)arcNode.P2.X, (int)arcNode.P2.Y), new((int)arcNode.P3.X, (int)arcNode.P3.Y) };
+            var points = new List<PointF> { new((int)arcNode.P1.X, (int)arcNode.P1.Y), new((int)arcNode.P2.X, (int)arcNode.P2.Y), new((int)arcNode.P3.X, (int)arcNode.P3.Y) };
             var comment = arcNode.Comment as ValueNode;
             var toDraw = new ToDraw
             {
@@ -203,7 +203,7 @@ public class Evaluator
         }
         void BuildPointNode(List<ToDraw> toDrawList, PointNode pointNode)
         {
-            var points = new List<Point> { new((int)pointNode.X, (int)pointNode.Y) };
+            var points = new List<PointF> { new((int)pointNode.X, (int)pointNode.Y) };
             var toDraw = new ToDraw
             {
                 color = LE.Color.First(),
@@ -408,8 +408,15 @@ public class Evaluator
         // Create a SequenceNode with the nodes
         var sequenceNode = new SequenceNode(nodes, intersectNode.SeqName);
         // Add the SequenceNode to Seqs
-        LE.Seqs.Add(sequenceNode);
-        return null!;
+        if (sequenceNode.Nodes.Count == 0)
+        {
+            throw new Exception("No intercept in the figures repeat");
+        }
+        else
+        {
+            LE.Seqs.Add(sequenceNode);
+            return null!;
+        }
     }
     /// <summary>
     /// Indicates whether the "wtf" flag is set. XD
