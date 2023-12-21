@@ -8,6 +8,7 @@ public partial class MainForm : Form
     private readonly Button button1 = new();
     private readonly Button button2 = new();
     private readonly PictureBox panel = new();
+    private Label errorLabel = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MainForm"/> class.
@@ -20,7 +21,6 @@ public partial class MainForm : Form
 
     }
 
-
     /// <summary>
     /// Event handler for the SizeChanged event of Form1.
     /// Adjusts the dynamic canvas size and updates the locations and sizes of the controls on the form.
@@ -30,53 +30,28 @@ public partial class MainForm : Form
     private void Form1_SizeChanged(object sender, EventArgs e)
     {
         AdjustDynamicCanvasSize();
-        button2.Location = new Point(20, Height / 3 + 30);
-        button1.Location = new Point(Width / 5 - 60, Height / 3 + 30);
-        textBox1.Location = new Point(20, 20);
-        textBox1.Size = new Size(Width / 5, Height / 3);
+        button2.Location = new Point(100, (int)(Height * 0.88));
+        button1.Location = new Point(25, (int)(Height * 0.88));
+        textBox1.Location = new Point(ClientSize.Width - (ClientSize.Width / 4), 0);
+        textBox1.Width = (int)(ClientSize.Width * 0.3);
+        textBox1.Height = ClientSize.Height;
+        textBox1.BackColor = ColorTranslator.FromHtml("#181926");
+        textBox1.ForeColor = ColorTranslator.FromHtml("#ffffff");
+        textBox1.PlaceholderText = "Enter your instructions";
+        textBox1.Font = new Font("Arial", 14);
+        button1.BringToFront();
+        button2.BringToFront();
     }
-
     /// <summary>
     /// Adjusts the size of the dynamic canvas based on the client size.
     /// </summary>
     private void AdjustDynamicCanvasSize()
     {
-        int canvasWidth = ClientSize.Width / 2;
+        int canvasWidth = (int)(ClientSize.Width * 0.9);
         int canvasHeight = ClientSize.Height;
-        panel.Size = new Size(canvasWidth, canvasHeight);
+        panel.Size = new Size(canvasWidth, (int)(canvasHeight * 0.95));
         panel.Location = new Point((ClientSize.Width - canvasWidth) / 2, 0);
     }
-
-    /// <summary>
-    /// Event handler for the Enter event of TextBox1.
-    /// Clears the text in TextBox1 if it is set to the default instruction text.
-    /// </summary>
-    /// <param name="sender">The object that raised the event.</param>
-    /// <param name="e">The event arguments.</param>
-    private void TextBox1_Enter(object sender, EventArgs e)
-    {
-        if (textBox1.Text == "Enter your instructions")
-        {
-            textBox1.Text = "";
-            textBox1.ForeColor = Color.Black;
-        }
-    }
-
-    /// <summary>
-    /// Event handler for the TextBox1 Leave event.
-    /// Sets the default text and color if the TextBox is empty.
-    /// </summary>
-    /// <param name="sender">The object that triggered the event.</param>
-    /// <param name="e">The event arguments.</param>
-    private void TextBox1_Leave(object sender, EventArgs e)
-    {
-        if (string.IsNullOrWhiteSpace(textBox1.Text))
-        {
-            textBox1.Text = "Enter your instructionss";
-            textBox1.ForeColor = Color.Gray;
-        }
-    }
-
     /// <summary>
     /// Handles the event when the submit button is clicked.
     /// </summary>
@@ -89,10 +64,11 @@ public partial class MainForm : Form
 
         if (graphics is string errorMessage)
         {
-            MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ShowErrorMessage(errorMessage);
         }
         else if (graphics is List<ToDraw> toDrawList)
         {
+            ShowErrorMessage("");
             foreach (ToDraw graphic in toDrawList)
             {
                 switch (graphic.figure)
@@ -126,6 +102,13 @@ public partial class MainForm : Form
         }
     }
 
+    private void ShowErrorMessage(string errorMessage)
+    {
+        errorLabel.Text = errorMessage;
+        errorLabel.Font = new Font("Arial", 14); // Set the font size to 14
+        errorLabel.Visible = true;
+    }
+
     /// <summary>
     /// Clears the graphics on the panel and optionally clears the text in the textBox.
     /// </summary>
@@ -141,153 +124,137 @@ public partial class MainForm : Form
     /// Draws a point on the canvas using the specified brush, point coordinates, comment, and graphics object.
     /// </summary>
     /// <param name="brush">The brush used to fill the ellipse representing the point.</param>
-    /// <param name="punto">The coordinates of the point.</param>
+    /// <param name="point">The coordinates of the point.</param>
     /// <param name="comment">The comment to be displayed next to the point.</param>
     /// <param name="canvas">The graphics object representing the canvas.</param>
-    private static void Draw_Point(Brush brush, PointF punto, string comment, Graphics canvas)
+    private static void Draw_Point(Brush brush, PointF point, string comment, Graphics canvas)
     {
-        canvas.FillEllipse(brush, punto.X, punto.Y, 7, 7);
-        canvas.DrawString(comment, new Font("Arial", 12), Brushes.Black, punto.X, punto.Y);
+        canvas.FillEllipse(brush, point.X, point.Y, 7, 7);
+        canvas.DrawString(comment, new Font("Arial", 12), Brushes.Black, point.X, point.Y);
     }
     /// <summary>
     /// Draws an arc on the specified canvas using the provided brush, points, and comment.
     /// </summary>
     /// <param name="brush">The brush used to fill the arc.</param>
-    /// <param name="puntos">An array of points that define the arc.</param>
+    /// <param name="points">An array of points that define the arc.</param>
     /// <param name="comment">The comment to be displayed.</param>
     /// <param name="canvas">The graphics canvas on which the arc will be drawn.</param>
     /// <exception cref="ArgumentException">Thrown when less than 3 points are provided.</exception>
-    private static void Draw_Arc(Brush brush, PointF[] puntos, string comment, Graphics canvas)
+    private static void Draw_Arc(Brush brush, PointF[] points, string comment, Graphics canvas)
     {
         // Ensure that we have at least 3 points
-        if (puntos.Length < 3)
+        if (points.Length < 3)
         {
             throw new ArgumentException("At least 3 points are required to draw an arc.");
         }
         // Calculate the bounding rectangle for the arc
-        float x = Math.Min(puntos[0].X, Math.Min(puntos[1].X, puntos[2].X));
-        float y = Math.Min(puntos[0].Y, Math.Min(puntos[1].Y, puntos[2].Y));
-        float width = Math.Max(puntos[0].X, Math.Max(puntos[1].X, puntos[2].X)) - x;
-        float height = Math.Max(puntos[0].Y, Math.Max(puntos[1].Y, puntos[2].Y)) - y;
+        float x = Math.Min(points[0].X, Math.Min(points[1].X, points[2].X));
+        float y = Math.Min(points[0].Y, Math.Min(points[1].Y, points[2].Y));
+        float width = Math.Max(points[0].X, Math.Max(points[1].X, points[2].X)) - x;
+        float height = Math.Max(points[0].Y, Math.Max(points[1].Y, points[2].Y)) - y;
 
         // Calculate the start and sweep angles
-        float startAngle = Convert.ToSingle(Math.Atan2(puntos[0].Y - puntos[1].Y, puntos[0].X - puntos[1].X) * 180 / Math.PI);
-        float endAngle = Convert.ToSingle(Math.Atan2(puntos[0].Y - puntos[2].Y, puntos[0].X - puntos[2].X) * 180 / Math.PI);
+        float startAngle = Convert.ToSingle(Math.Atan2(points[0].Y - points[1].Y, points[0].X - points[1].X) * 180 / Math.PI);
+        float endAngle = Convert.ToSingle(Math.Atan2(points[0].Y - points[2].Y, points[0].X - points[2].X) * 180 / Math.PI);
 
         // Draw the arc
         canvas.DrawArc(new Pen(brush), x, y, width, height, startAngle, endAngle - startAngle);
 
         // Draw the comment
-        canvas.DrawString(comment, new Font("Arial", 12), Brushes.Black, puntos[0].X, puntos[0].Y);
+        canvas.DrawString(comment, new Font("Arial", 12), Brushes.White, points[0].X, points[0].Y);
     }
 
     /// <summary>
     /// Draws a circle on the specified canvas using the provided brush, center point, radius, comment, and graphics object.
     /// </summary>
     /// <param name="brush">The brush used to fill the circle.</param>
-    /// <param name="punto">The center point of the circle.</param>
+    /// <param name="point">The center point of the circle.</param>
     /// <param name="radio">The radius of the circle.</param>
     /// <param name="comment">The comment to be displayed near the circle.</param>
     /// <param name="canvas">The graphics object representing the canvas on which the circle will be drawn.</param>
-    private static void Draw_Circle(Brush brush, PointF punto, double radio, string comment, Graphics canvas)
+    private static void Draw_Circle(Brush brush, PointF point, double radio, string comment, Graphics canvas)
     {
         float diameter = (int)(radio * 2);
-        float x = punto.X - (diameter / 2);
-        float y = punto.Y - (diameter / 2);
+        float x = point.X - (diameter / 2);
+        float y = point.Y - (diameter / 2);
 
         canvas.DrawEllipse(new Pen(brush), x, y, diameter, diameter);
-        canvas.DrawString(comment, new Font("Arial", 12), Brushes.Black, punto.X, punto.Y);
+        canvas.DrawString(comment, new Font("Arial", 12), Brushes.White, point.X, point.Y);
     }
     /// <summary>
     /// Draws a segment on the canvas using the specified brush, points, comment, and graphics object.
     /// </summary>
     /// <param name="brush">The brush used to draw the segment.</param>
-    /// <param name="puntos">The array of points that define the segment.</param>
+    /// <param name="points">The array of points that define the segment.</param>
     /// <param name="comment">The comment to be displayed near the starting point of the segment.</param>
     /// <param name="canvas">The graphics object representing the canvas.</param>
-    private static void Draw_Segment(Brush brush, PointF[] puntos, string comment, Graphics canvas)
+    private static void Draw_Segment(Brush brush, PointF[] points, string comment, Graphics canvas)
     {
-        foreach (PointF punto in puntos)
+        foreach (PointF point in points)
         {
-            Draw_Point(brush, punto, "", canvas);
+            Draw_Point(brush, point, "", canvas);
         }
-        canvas.DrawLine(new Pen(brush), puntos[0], puntos[1]);
-        canvas.DrawString(comment, new Font("Arial", 12), Brushes.Black, puntos[0].X, puntos[0].Y);
+        canvas.DrawLine(new Pen(brush), points[0], points[1]);
+        canvas.DrawString(comment, new Font("Arial", 12), Brushes.Black, points[0].X, points[0].Y);
     }
     /// <summary>
     /// Draws a line connecting the given points on the canvas using the specified brush.
     /// </summary>
     /// <param name="brush">The brush used to draw the line.</param>
-    /// <param name="puntos">An array of points that define the line.</param>
+    /// <param name="points">An array of points that define the line.</param>
     /// <param name="comment">A comment to be displayed near the line.</param>
     /// <param name="canvas">The graphics canvas on which the line is drawn.</param>
-    private static void Draw_Line(Brush brush, PointF[] puntos, string comment, Graphics canvas)
+    private static void Draw_Line(Brush brush, PointF[] points, string comment, Graphics canvas)
     {
-        foreach (PointF punto in puntos)
+        foreach (PointF point in points)
         {
-            Draw_Point(brush, punto, "", canvas);
+            Draw_Point(brush, point, "", canvas);
         }
-        PointF[] interceptos = Intercepts(puntos[0], puntos[1]);
-        canvas.DrawLine(new Pen(brush), interceptos[0], interceptos[1]);
-        canvas.DrawString(comment, new Font("Arial", 12), Brushes.Black, puntos[0].X, puntos[1].Y);
+
+        // Calculate the slope of the line
+        float slope = (points[1].Y - points[0].Y) / (points[1].X - points[0].X);
+
+        // Calculate the y-intercept of the line
+        float yIntercept = points[0].Y - slope * points[0].X;
+
+        // Calculate the points where the line intersects the edges of the canvas
+        PointF leftPoint = new PointF(0, yIntercept);
+        PointF rightPoint = new PointF(canvas.VisibleClipBounds.Width, slope * canvas.VisibleClipBounds.Width + yIntercept);
+
+        // Draw the line
+        canvas.DrawLine(new Pen(brush), leftPoint, rightPoint);
+
+        // Draw the comment
+        canvas.DrawString(comment, new Font("Arial", 12), Brushes.Black, points[0].X, points[0].Y);
     }
     /// <summary>
     /// Draws a ray on the canvas from the starting point to the point where it intersects the canvas boundary.
     /// </summary>
     /// <param name="brush">The brush used to draw the ray.</param>
-    /// <param name="puntos">An array of points representing the starting and ending points of the ray.</param>
+    /// <param name="points">An array of points representing the starting and ending points of the ray.</param>
     /// <param name="comment">A comment to be displayed at the starting point of the ray.</param>
     /// <param name="canvas">The graphics canvas on which the ray will be drawn.</param>
-    private static void Draw_Ray(Brush brush, PointF[] puntos, string comment, Graphics canvas)
+    private static void Draw_Ray(Brush brush, PointF[] points, string comment, Graphics canvas)
     {
-        foreach (PointF punto in puntos)
+        foreach (PointF point in points)
         {
-            Draw_Point(brush, punto, "", canvas);
+            Draw_Point(brush, point, "", canvas);
         }
-        // Get the starting and ending points of the ray
-        PointF startPoint = puntos[0];
-        PointF endPoint = puntos[1];
-        // Calculate the slope of the ray
-        float slope = Earring(startPoint, endPoint);
 
-        // Calculate the intercept of the ray with the y-axis
-        float intercept = startPoint.Y - slope * startPoint.X;
+        // Calculate the slope of the line
+        float slope = (points[1].Y - points[0].Y) / (points[1].X - points[0].X);
 
-        // Calculate the x-coordinate of the point where the ray intersects the canvas boundary
-        float canvasBoundaryX = (float)canvas.ClipBounds.Width;
+        // Calculate the y-intercept of the line
+        float yIntercept = points[0].Y - slope * points[0].X;
 
-        // Calculate the y-coordinate of the point where the ray intersects the canvas boundary
-        float canvasBoundaryY = (float)(slope * canvasBoundaryX + intercept);
+        // Calculate the point where the line intersects the right edge of the canvas
+        PointF rightPoint = new PointF(canvas.VisibleClipBounds.Width, slope * canvas.VisibleClipBounds.Width + yIntercept);
 
-        // Draw the ray from the starting point to the point where it intersects the canvas boundary
-        canvas.DrawLine(new Pen(brush), startPoint, new PointF(canvasBoundaryX, canvasBoundaryY));
+        // Draw the line
+        canvas.DrawLine(new Pen(brush), points[0], rightPoint);
 
-        canvas.DrawString(comment, new Font("Arial", 12), Brushes.Black, startPoint.X, startPoint.Y);
-    }
-
-    /// <summary>
-    /// Calculates the slope of a line segment defined by two points.
-    /// </summary>
-    /// <param name="p1">The first point of the line segment.</param>
-    /// <param name="p2">The second point of the line segment.</param>
-    /// <returns>The slope of the line segment.</returns>
-    public static float Earring(PointF p1, PointF p2)
-    {
-        return (p2.X - p1.X) / (p2.Y - p1.Y);
-    }
-
-    /// <summary>
-    /// Calculates the intercepts of a line passing through two points.
-    /// </summary>
-    /// <param name="p1">The first point on the line.</param>
-    /// <param name="p2">The second point on the line.</param>
-    /// <returns>An array of Point objects representing the intercepts.</returns>
-    public static PointF[] Intercepts(PointF p1, PointF p2)
-    {
-        float m = Earring(p1, p2);
-        float n = p1.Y - m * p1.X;
-        float cero = -n / m;
-        return new PointF[] { new(0, (float)n), new((float)cero, 0) };
+        // Draw the comment
+        canvas.DrawString(comment, new Font("Arial", 12), Brushes.Black, points[0].X, points[0].Y);
     }
     #endregion
 }

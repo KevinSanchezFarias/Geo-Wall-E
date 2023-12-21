@@ -1,9 +1,12 @@
+
 namespace Nodes;
 
 /// <summary>
 /// Represents an abstract base class for nodes in the parser.
 /// </summary>
-public abstract class Node { }
+public abstract class Node
+{
+}
 
 /// <summary>
 /// Represents an end node in the parser.
@@ -39,6 +42,13 @@ public class InfiniteSequenceNode : Node
         Sequence = sequence;
         Name = name;
     }
+}
+public class ImportNode : Node
+{
+    public string FilePath { get; }
 
-    // Implement the rest of the Node interface here
+    public ImportNode(string filePath)
+    {
+        FilePath = filePath;
+    }
 }

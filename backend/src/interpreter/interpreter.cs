@@ -22,9 +22,7 @@ public class Interpreter
         {
             try
             {
-                var lexer = new Lexer(line);
-                var parser = new Parser(lexer.LexTokens);
-                var evaluator = new Evaluator(parser.Parse());
+                Evaluator evaluator = Launch(line);
                 object? lineResult = evaluator.Evaluate();
                 lineX++;
                 if (lineResult is not null)
@@ -42,8 +40,16 @@ public class Interpreter
             catch (Exception e) { return $"In {lineX}: {e.Message}"; }
         }
         return toDraws;
+
+    }
+    public static Evaluator Launch(string line)
+    {
+        var lexer = new Lexer(line);
+        var parser = new Parser(lexer.LexTokens);
+        var evaluator = new Evaluator(parser.Parse());
+        return evaluator;
     }
 
     /*Minified*/
-    private static void CleanFigs() { LE.arcND.Clear(); LE.cirND.Clear(); LE.linND.Clear(); LE.poiND.Clear(); LE.rayND.Clear(); LE.segND.Clear(); LE.Seqs.Clear(); LE.Color.Clear(); LE.Color.Push(Brushes.Black); }
+    private static void CleanFigs() { LE.arcND.Clear(); LE.cirND.Clear(); LE.linND.Clear(); LE.poiND.Clear(); LE.rayND.Clear(); LE.segND.Clear(); LE.Seqs.Clear(); LE.Color.Clear(); LE.Color.Push(Brushes.White); }
 }

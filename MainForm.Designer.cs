@@ -29,43 +29,44 @@ partial class MainForm
     private void InitializeComponent()
     {
         //Background
-        this.BackgroundImage = Image.FromFile("./img/X.jpg");
-        this.BackgroundImageLayout = ImageLayout.Stretch;
+        BackColor = ColorTranslator.FromHtml("#24273a");
+
+        errorLabel = new System.Windows.Forms.Label();
+        //this.errorLabel.Dock = DockStyle.Bottom;
+        errorLabel.Height = 50;
+        errorLabel.ForeColor = ColorTranslator.FromHtml("#ed8796"); // Set the text color to #ed8796
+        errorLabel.BackColor = ColorTranslator.FromHtml("#363a4f"); // Set the background color to #363a4f
+        errorLabel.Width = (int)(this.ClientSize.Width * 0.7);
+        errorLabel.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
+        errorLabel.Dock = DockStyle.Bottom;
+
 
         //Button 1        
-        this.button1.Image = new Bitmap("./img/play.png");
-        this.button1.ImageAlign = ContentAlignment.MiddleCenter;
-        this.button1.Image = (Image)(new Bitmap(this.button1.Image, new Size(20, 20)));
-        this.button1.Location = new Point(20, 120);
-        this.button1.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+        button1.Image = new Bitmap("./img/play.png");
+        button1.ImageAlign = ContentAlignment.MiddleCenter;
+        button1.Image = (Image)(new Bitmap(this.button1.Image, new Size(20, 20)));
+        button1.Anchor = AnchorStyles.Left | AnchorStyles.Top;
         button1.Click += new EventHandler(SubmitCommands);
         //Button 2
-        this.button2.Image = new Bitmap("./img/trash.png");
-        this.button2.ImageAlign = ContentAlignment.MiddleCenter;
-        this.button2.Image = (Image)(new Bitmap(this.button2.Image, new Size(20, 20)));
-        this.button2.Location = new Point(100, 120);
-        this.button2.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+        button2.Image = new Bitmap("./img/trash.png");
+        button2.ImageAlign = ContentAlignment.MiddleCenter;
+        button2.Image = (Image)(new Bitmap(this.button2.Image, new Size(20, 20)));
+        button2.Anchor = AnchorStyles.Left | AnchorStyles.Top;
         button2.Click += new System.EventHandler(ClearGraphics);
 
         //Graph panel
-        //Panel panel = new Panel();
         panel.Anchor = AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Bottom;
         panel.BackColor = System.Drawing.Color.FromArgb(1, 1, 1, 0);
-        panel.Location = new System.Drawing.Point(this.ClientSize.Width / 2, 0);
-        panel.Size = new System.Drawing.Size(this.ClientSize.Width / 2, this.ClientSize.Height);
+        panel.Location = new System.Drawing.Point(0, 0);
+        panel.Size = new System.Drawing.Size((int)(this.ClientSize.Width * 0.7), (int)(this.ClientSize.Height * 0.8));
 
         //Text box
-        this.textBox1 = new System.Windows.Forms.TextBox();
-        this.textBox1.Size = new System.Drawing.Size(this.Height / 3, this.Width / 5);
-        this.textBox1.Location = new Point(20, 20);
-        this.textBox1.Anchor = AnchorStyles.Left | AnchorStyles.Top;
-        this.textBox1.Multiline = true;
-        this.textBox1.AcceptsReturn = true;
-        this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-        this.textBox1.Enter += new System.EventHandler(TextBox1_Enter);
-        this.textBox1.Leave += new System.EventHandler(TextBox1_Leave);
-        this.textBox1.Text = "Enter your instructions";
-        this.textBox1.ForeColor = System.Drawing.Color.Gray;
+        textBox1 = new System.Windows.Forms.TextBox();
+        textBox1.Anchor = AnchorStyles.Left | AnchorStyles.Top;
+        textBox1.Multiline = true;
+        textBox1.AcceptsReturn = true;
+        textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+        textBox1.ForeColor = System.Drawing.Color.White;
 
         //MainForm
         this.components = new System.ComponentModel.Container();
@@ -83,6 +84,7 @@ partial class MainForm
         this.Controls.Add(this.button1);
         this.Controls.Add(this.button2);
         this.Controls.Add(this.textBox1);
+        this.Controls.Add(this.errorLabel);
 
         this.Controls.SetChildIndex(textBox1, 0);
         this.Resize += new EventHandler(Form1_SizeChanged);

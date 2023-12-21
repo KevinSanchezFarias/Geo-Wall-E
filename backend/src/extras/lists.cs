@@ -4,7 +4,7 @@ namespace Lists
 {
     public static class LE
     {
-        private static Stack<Brush> color = new(new[] { Brushes.Black });
+        private static Stack<Brush> color = new(new[] { Brushes.White });
         public static readonly List<PointNode> poiND = new();
         public static readonly List<ArcNode> arcND = new();
         public static readonly List<CircleNode> cirND = new();

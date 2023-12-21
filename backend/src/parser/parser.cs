@@ -2,6 +2,8 @@ using Tokens;
 using Nodes;
 using System.Reflection;
 using Lists;
+using LexerAnalize;
+using EvaluatorAnalize;
 
 namespace ParserAnalize;
 public class Parser
@@ -9,7 +11,8 @@ public class Parser
     private List<Token> Tokens { get; set; }
     private static List<FunctionDeclarationNode> fDN = new();
     private int currentTokenIndex = 0;
-
+    private readonly HashSet<string> ImportedFiles = new();
+    private readonly Dictionary<string, Node> ImportedModules = new();
     private Token? CurrentToken => currentTokenIndex < Tokens.Count ? Tokens[currentTokenIndex] : null;
 
     /// <summary>
@@ -118,6 +121,7 @@ public class Parser
                 TokenType.Number => ParseNumber,
                 TokenType.StringLiteral => ParseStringLiteral,
                 TokenType.Identifier => ParseIdentifier,
+                TokenType.ImportKeyword => ParseImport,
                 _ => throw new Exception($"Unexpected token {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}"),
             };
         }
@@ -726,7 +730,7 @@ public class Parser
                         }
                         //
                         values.RemoveAt(0);
-                        MessageBox.Show($"YOU HAVE TO STOP THIS PLEASE!, THE SEQUENCE \"{name}\" HAS MORE THAN 2 BILLIONS OF NUMBERS! column {CurrentToken?.Column} btw");
+                        MessageBox.Show($"THE SEQUENCE \"{name}\" HAS MORE THAN 2 BILLIONS OF NUMBERS! at column {CurrentToken?.Column} btw");
                     });
                 }
                 else
@@ -789,5 +793,33 @@ public class Parser
     }
 
     public static List<FunctionDeclarationNode> FDN { get => fDN; set => fDN = value; }
+    private Node ParseImport
+    {
+        get
+        {
+            _ = ConsumeToken(TokenType.ImportKeyword);
+            var path = ConsumeToken(TokenType.StringLiteral);
+
+            // Check if the file has already been imported
+            if (ImportedFiles.Contains(path.Value))
+            {
+                // Skip this file
+                return null!;
+            }
+            // Mark the file as imported
+            ImportedFiles.Add(path.Value);
+            // Lex, parse, and evaluate the file
+            var lexerX = new Lexer(File.ReadAllText(path.Value));
+            lexerX.LexTokens.RemoveAt(lexerX.LexTokens.Count - 1);
+            var parser = new Parser(lexerX.LexTokens);
+            var result = parser.Parse();
+            Evaluator ev = new(parser.Parse());
+            ev.Evaluate();
+
+            // Store the result in a dictionary
+            ImportedModules[path.Value] = result;
+            return new EndNode();
+        }
+    }
     #endregion
 }

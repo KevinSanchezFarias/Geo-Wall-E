@@ -138,6 +138,7 @@ public partial class Lexer
             "then" => new Token(TokenType.ThenKeyword, result, Line, Column),
             "else" => new Token(TokenType.ElseKeyword, result, Line, Column),
             "in" => new Token(TokenType.InKeyword, result, Line, Column),
+            "import" => new Token(TokenType.ImportKeyword, result, Line, Column),
             _ => new Token(TokenType.Identifier, result, Line, Column),
         };
     }

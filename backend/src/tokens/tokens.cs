@@ -37,7 +37,8 @@ public enum TokenType
     ColorKeyword,
     RestoreKeyword,
     IntersectKeyword,
-    DotDotDot
+    DotDotDot,
+    ImportKeyword
 }
 /// <summary>
 /// Represents a token in the program.
