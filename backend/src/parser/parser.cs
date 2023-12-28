@@ -424,17 +424,12 @@ public class Parser
         {
             //measure(p1, p2);
             _ = ConsumeToken(TokenType.MeasureKeyword);
-            if (CurrentToken?.Type != TokenType.LParen)
-            {
-                throw new Exception($"Expected token {TokenType.LParen}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
-            }
             //Point 1
             _ = ConsumeToken(TokenType.LParen);
             var p1 = (PointNode)ParseExpression();
+            if (p1 is not PointNode) throw new Exception($"Expected token {TokenType.Point}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
 
             //Comma
-            if (p1 is not PointNode) throw new Exception($"Expected token {TokenType.Point}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
-            if (CurrentToken?.Type != TokenType.Comma) throw new Exception($"Expected token {TokenType.Comma}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
             _ = ConsumeToken(TokenType.Comma);
             //Point 2 
             var p2 = (PointNode)ParseExpression();

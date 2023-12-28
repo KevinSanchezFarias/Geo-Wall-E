@@ -461,14 +461,14 @@ public class Evaluator
             double a = (c1r * c1r - c2r * c2r + d * d) / (2.0 * d);
             double h = Math.Sqrt(c1r * c1r - a * a);
 
-            double cx2 = circle1.Center.X + a * (dx) / d;
-            double cy2 = circle1.Center.Y + a * (dy) / d;
+            double cx2 = circle1.Center.X + a * dx / d;
+            double cy2 = circle1.Center.Y + a * dy / d;
 
             // Get the points of intersection
-            double intersectionX1 = cx2 + h * (dy) / d;
-            double intersectionY1 = cy2 - h * (dx) / d;
-            double intersectionX2 = cx2 - h * (dy) / d;
-            double intersectionY2 = cy2 + h * (dx) / d;
+            double intersectionX1 = cx2 + h * dy / d;
+            double intersectionY1 = cy2 - h * dx / d;
+            double intersectionX2 = cx2 - h * dy / d;
+            double intersectionY2 = cy2 + h * dx / d;
 
             intersectionPoints.Add(new PointNode("Intersection1", intersectionX1, intersectionY1));
             intersectionPoints.Add(new PointNode("Intersection2", intersectionX2, intersectionY2));

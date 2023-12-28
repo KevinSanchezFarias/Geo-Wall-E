@@ -2,6 +2,7 @@ using LexerAnalize;
 using ParserAnalize;
 using EvaluatorAnalize;
 using Lists;
+using System.Drawing.Text;
 
 namespace InterpreterAnalizer;
 public class Interpreter
@@ -11,45 +12,44 @@ public class Interpreter
     /// </summary>
     /// <param name="input">The input string to interpret.</param>
     /// <returns>A list of objects to draw.</returns>
-    public static object Interpret(string input)
+    public static IEnumerable<object> Interpret(string input)
     {
-        short lineX = 0;
+        short lineX = 1;
         List<ToDraw> toDraws = new();
         // Split the string into lines
         var lines = input.Split(new[] { ";\r" }, StringSplitOptions.RemoveEmptyEntries);
         CleanFigs();
         foreach (var line in lines)
         {
+            object lineResult;
             try
             {
-                Evaluator evaluator = Launch(line);
-                object? lineResult = evaluator.Evaluate();
+                var lexer = new Lexer(line);
+                var parser = new Parser(lexer.LexTokens);
+                var evaluator = new Evaluator(parser.Parse());
+                lineResult = evaluator.Evaluate();
                 lineX++;
-                if (lineResult is not null)
-                {
-                    if (lineResult is ToDraw draw)
-                    {
-                        toDraws.Add(draw);
-                    }
-                    else if (lineResult is List<ToDraw> drawList)
-                    {
-                        toDraws.AddRange(drawList);
-                    }
-                }
             }
-            catch (Exception e) { return $"In {lineX}: {e.Message}"; }
+            catch (Exception ex) { lineResult = $"Line:{lineX} {ex.Message}"; }
+            if (lineResult is ToDraw draw)
+            {
+                yield return draw;
+            }
+            else if (lineResult is List<ToDraw> drawList)
+            {
+                toDraws.AddRange(drawList);
+                yield return toDraws;
+            }
+            else if (lineResult is not null)
+            {
+                yield return lineResult;
+            }
+            else
+            {
+                continue;
+            }
         }
-        return toDraws;
-
     }
-    public static Evaluator Launch(string line)
-    {
-        var lexer = new Lexer(line);
-        var parser = new Parser(lexer.LexTokens);
-        var evaluator = new Evaluator(parser.Parse());
-        return evaluator;
-    }
-
     /*Minified*/
     private static void CleanFigs() { LE.arcND.Clear(); LE.cirND.Clear(); LE.linND.Clear(); LE.poiND.Clear(); LE.rayND.Clear(); LE.segND.Clear(); LE.Seqs.Clear(); LE.Color.Clear(); LE.Color.Push(Brushes.White); }
 }

@@ -10,12 +10,7 @@ public partial class Lexer
         {
             switch (CurrentChar)
             {
-                case '\r':
-                    Advance();
-                    Line++;
-                    Column = 1;
-                    continue;
-                case '\n':
+                case '\r' or '\n':
                     Advance();
                     Line++;
                     Column = 1;

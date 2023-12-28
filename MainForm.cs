@@ -8,7 +8,8 @@ public partial class MainForm : Form
     private readonly Button button1 = new();
     private readonly Button button2 = new();
     private readonly PictureBox panel = new();
-    private Label errorLabel = new();
+    private TextBox errorTextBox;
+
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MainForm"/> class.
@@ -16,6 +17,7 @@ public partial class MainForm : Form
     public MainForm()
     {
         textBox1 = new();
+        errorTextBox = new();
         InitializeComponent();
         WindowState = FormWindowState.Maximized;
 
@@ -30,8 +32,8 @@ public partial class MainForm : Form
     private void Form1_SizeChanged(object sender, EventArgs e)
     {
         AdjustDynamicCanvasSize();
-        button2.Location = new Point(100, (int)(Height * 0.88));
-        button1.Location = new Point(25, (int)(Height * 0.88));
+        button2.Location = new Point(400, (int)(Height * 0.875));
+        button1.Location = new Point(150, (int)(Height * 0.875));
         textBox1.Location = new Point(ClientSize.Width - (ClientSize.Width / 4), 0);
         textBox1.Width = (int)(ClientSize.Width * 0.3);
         textBox1.Height = ClientSize.Height;
@@ -47,9 +49,9 @@ public partial class MainForm : Form
     /// </summary>
     private void AdjustDynamicCanvasSize()
     {
-        int canvasWidth = (int)(ClientSize.Width * 0.9);
+        int canvasWidth = ClientSize.Width;
         int canvasHeight = ClientSize.Height;
-        panel.Size = new Size(canvasWidth, (int)(canvasHeight * 0.95));
+        panel.Size = new Size(canvasWidth, (int)(canvasHeight * 0.92));
         panel.Location = new Point((ClientSize.Width - canvasWidth) / 2, 0);
     }
     /// <summary>
@@ -60,16 +62,14 @@ public partial class MainForm : Form
     private void SubmitCommands(object sender, EventArgs e)
     {
         Graphics canvas = panel.CreateGraphics();
-        var graphics = MiddleEnd.GSharp(textBox1.Text);
 
-        if (graphics is string errorMessage)
+        foreach (var graphics in MiddleEnd.GSharp(textBox1.Text))
         {
-            ShowErrorMessage(errorMessage);
-        }
-        else if (graphics is List<ToDraw> toDrawList)
-        {
-            ShowErrorMessage("");
-            foreach (ToDraw graphic in toDrawList)
+            if (graphics is string errorMessage)
+            {
+                ShowErrorMessage(errorMessage);
+            }
+            else if (graphics is ToDraw graphic)
             {
                 switch (graphic.figure)
                 {
@@ -92,21 +92,22 @@ public partial class MainForm : Form
                         Draw_Circle(graphic.color, graphic.points[0], graphic.rad, graphic.comment, canvas);
                         break;
                     default:
-                        continue;
+                        break;
                 }
             }
-        }
-        else
-        {
-            MessageBox.Show("Could not graph", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            else
+            {
+                MessageBox.Show("Could not graph", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 
+    // Modify your ShowErrorMessage method to use the TextBox
     private void ShowErrorMessage(string errorMessage)
     {
-        errorLabel.Text = errorMessage;
-        errorLabel.Font = new Font("Arial", 14); // Set the font size to 14
-        errorLabel.Visible = true;
+        errorTextBox.AppendText(errorMessage + Environment.NewLine); // Append the new error message
+        errorTextBox.Font = new Font("Arial", 14); // Set the font size to 14
+        errorTextBox.Visible = true;
     }
 
     /// <summary>
@@ -148,14 +149,14 @@ public partial class MainForm : Form
             throw new ArgumentException("At least 3 points are required to draw an arc.");
         }
         // Calculate the bounding rectangle for the arc
-        float x = Math.Min(points[0].X, Math.Min(points[1].X, points[2].X));
-        float y = Math.Min(points[0].Y, Math.Min(points[1].Y, points[2].Y));
-        float width = Math.Max(points[0].X, Math.Max(points[1].X, points[2].X)) - x;
-        float height = Math.Max(points[0].Y, Math.Max(points[1].Y, points[2].Y)) - y;
+        var x = Math.Min(points[0].X, Math.Min(points[1].X, points[2].X));
+        var y = Math.Min(points[0].Y, Math.Min(points[1].Y, points[2].Y));
+        var width = Math.Max(points[0].X, Math.Max(points[1].X, points[2].X)) - x;
+        var height = Math.Max(points[0].Y, Math.Max(points[1].Y, points[2].Y)) - y;
 
         // Calculate the start and sweep angles
-        float startAngle = Convert.ToSingle(Math.Atan2(points[0].Y - points[1].Y, points[0].X - points[1].X) * 180 / Math.PI);
-        float endAngle = Convert.ToSingle(Math.Atan2(points[0].Y - points[2].Y, points[0].X - points[2].X) * 180 / Math.PI);
+        var startAngle = Convert.ToSingle(Math.Atan2(points[0].Y - points[1].Y, points[0].X - points[1].X) * 180 / Math.PI);
+        var endAngle = Convert.ToSingle(Math.Atan2(points[0].Y - points[2].Y, points[0].X - points[2].X) * 180 / Math.PI);
 
         // Draw the arc
         canvas.DrawArc(new Pen(brush), x, y, width, height, startAngle, endAngle - startAngle);
@@ -174,9 +175,9 @@ public partial class MainForm : Form
     /// <param name="canvas">The graphics object representing the canvas on which the circle will be drawn.</param>
     private static void Draw_Circle(Brush brush, PointF point, double radio, string comment, Graphics canvas)
     {
-        float diameter = (int)(radio * 2);
-        float x = point.X - (diameter / 2);
-        float y = point.Y - (diameter / 2);
+        var diameter = (int)(radio * 2);
+        var x = point.X - (diameter / 2);
+        var y = point.Y - (diameter / 2);
 
         canvas.DrawEllipse(new Pen(brush), x, y, diameter, diameter);
         canvas.DrawString(comment, new Font("Arial", 12), Brushes.White, point.X, point.Y);
@@ -212,14 +213,14 @@ public partial class MainForm : Form
         }
 
         // Calculate the slope of the line
-        float slope = (points[1].Y - points[0].Y) / (points[1].X - points[0].X);
+        var slope = (points[1].Y - points[0].Y) / (points[1].X - points[0].X);
 
         // Calculate the y-intercept of the line
-        float yIntercept = points[0].Y - slope * points[0].X;
+        var yIntercept = points[0].Y - slope * points[0].X;
 
         // Calculate the points where the line intersects the edges of the canvas
-        PointF leftPoint = new PointF(0, yIntercept);
-        PointF rightPoint = new PointF(canvas.VisibleClipBounds.Width, slope * canvas.VisibleClipBounds.Width + yIntercept);
+        PointF leftPoint = new(0, yIntercept);
+        PointF rightPoint = new(canvas.VisibleClipBounds.Width, slope * canvas.VisibleClipBounds.Width + yIntercept);
 
         // Draw the line
         canvas.DrawLine(new Pen(brush), leftPoint, rightPoint);
@@ -242,13 +243,13 @@ public partial class MainForm : Form
         }
 
         // Calculate the slope of the line
-        float slope = (points[1].Y - points[0].Y) / (points[1].X - points[0].X);
+        var slope = (points[1].Y - points[0].Y) / (points[1].X - points[0].X);
 
         // Calculate the y-intercept of the line
-        float yIntercept = points[0].Y - slope * points[0].X;
+        var yIntercept = points[0].Y - slope * points[0].X;
 
         // Calculate the point where the line intersects the right edge of the canvas
-        PointF rightPoint = new PointF(canvas.VisibleClipBounds.Width, slope * canvas.VisibleClipBounds.Width + yIntercept);
+        PointF rightPoint = new(canvas.VisibleClipBounds.Width, slope * canvas.VisibleClipBounds.Width + yIntercept);
 
         // Draw the line
         canvas.DrawLine(new Pen(brush), points[0], rightPoint);

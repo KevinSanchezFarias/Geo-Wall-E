@@ -31,14 +31,17 @@ partial class MainForm
         //Background
         BackColor = ColorTranslator.FromHtml("#24273a");
 
-        errorLabel = new System.Windows.Forms.Label();
-        //this.errorLabel.Dock = DockStyle.Bottom;
-        errorLabel.Height = 50;
-        errorLabel.ForeColor = ColorTranslator.FromHtml("#ed8796"); // Set the text color to #ed8796
-        errorLabel.BackColor = ColorTranslator.FromHtml("#363a4f"); // Set the background color to #363a4f
-        errorLabel.Width = (int)(this.ClientSize.Width * 0.7);
-        errorLabel.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
-        errorLabel.Dock = DockStyle.Bottom;
+        // Initialize the TextBox somewhere in your code, e.g. in your form's constructor
+        errorTextBox = new TextBox();
+        errorTextBox.Multiline = true;
+        errorTextBox.ScrollBars = ScrollBars.Vertical;
+        errorTextBox.ReadOnly = true;
+        errorTextBox.Height = 75;
+        errorTextBox.ForeColor = ColorTranslator.FromHtml("#ed8796"); // Set the text color to #ed8796
+        errorTextBox.BackColor = ColorTranslator.FromHtml("#363a4f"); // Set the background color to #363a4f
+        errorTextBox.Width = (int)(this.ClientSize.Width * 0.7);
+        errorTextBox.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
+        errorTextBox.Dock = DockStyle.Bottom;
 
 
         //Button 1        
@@ -84,7 +87,7 @@ partial class MainForm
         this.Controls.Add(this.button1);
         this.Controls.Add(this.button2);
         this.Controls.Add(this.textBox1);
-        this.Controls.Add(this.errorLabel);
+        this.Controls.Add(this.errorTextBox);
 
         this.Controls.SetChildIndex(textBox1, 0);
         this.Resize += new EventHandler(Form1_SizeChanged);
