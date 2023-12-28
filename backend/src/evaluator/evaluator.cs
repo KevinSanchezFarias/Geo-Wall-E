@@ -228,8 +228,12 @@ public class Evaluator
                 return null!;
             case ValueNode valueNode:
                 return valueNode.Value;
+            case MultiAssignmentNode multiAssignmentNode:
+                return MultiAssignmentHandler(multiAssignmentNode);
             case ConstDeclarationNode constDeclarationNode:
                 return ConstDeclarationNodeHandler(constDeclarationNode);
+            case GlobalConstNode globalConstNode:
+                return GlobalConstNodeHandler(globalConstNode);
             case IntersectNode intersectNode:
                 return IntersectHandler(intersectNode);
             case DrawNode drawNode:
@@ -396,6 +400,49 @@ public class Evaluator
             throw new Exception($"Invalid measure node {measureNode} passed to measure handler, is it possible to even get here?");
         }
         #endregion
+    }
+    private object GlobalConstNodeHandler(GlobalConstNode globalConstNode)
+    {
+        var matchingNode = LE.DeclaredConst.FirstOrDefault(node => node.Identifier == globalConstNode.Identifier);
+        return Visit((Node)matchingNode!.Value);
+    }
+    private object MultiAssignmentHandler(MultiAssignmentNode multiAssignmentNode)
+    {
+        var identifiers = multiAssignmentNode.Identifiers;
+        var sequence = multiAssignmentNode.Sequence;
+
+        // Evaluate the sequence
+        var values = sequence.Nodes.Select(Visit).ToList();
+
+        // Assign each value to its corresponding identifier, or UndefinedNode.Value if there is no corresponding value
+        for (int i = 0; i < identifiers.Count - 1; i++)
+        {
+            var identifier = identifiers[i];
+            var value = i < values.Count ? values[i] : UndefinedNode.Value;
+
+            // Create a new ConstDeclarationNode and add it to cDN
+            var constDeclarationNode = new ConstDeclarationNode(identifier, new ValueNode(value));
+            LE.cDN.Add(constDeclarationNode);
+        }
+
+        // If there are as many or more values than identifiers, create a new SequenceNode for the last identifier
+        if (values.Count >= identifiers.Count)
+        {
+            var lastIdentifier = identifiers.Last();
+            var remainingValues = values.Skip(identifiers.Count - 1).Select(value => new ValueNode(value)).ToList<Node>();
+            var sequenceNode = new SequenceNode(remainingValues, lastIdentifier);
+            LE.Seqs.Add(sequenceNode);
+        }
+        // Otherwise, create a new ConstDeclarationNode for the last identifier and add it to cDN
+        else
+        {
+            var lastIdentifier = identifiers.Last();
+            var value = UndefinedNode.Value;
+            var constDeclarationNode = new ConstDeclarationNode(lastIdentifier, new ValueNode(value));
+            LE.cDN.Add(constDeclarationNode);
+        }
+
+        return null!;
     }
     private object IntersectHandler(IntersectNode intersectNode)
     {
@@ -863,7 +910,7 @@ public class Evaluator
         {
             variables[constDeclarationNode.Identifier] = Visit(constDeclarationNode.Value);
         }
-        LE.cDN.Add(new ConstDeclarationNode(
+        LE.DeclaredConst.Add(new GlobalConstNode(
             constDeclarationNode.Identifier,
             new ValueNode(Visit(constDeclarationNode.Value))));
         return null!;

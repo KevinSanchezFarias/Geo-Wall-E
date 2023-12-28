@@ -31,24 +31,40 @@ public class ValueNode : Node
         Value = value;
     }
 }
-
-public class InfiniteSequenceNode : Node
+public class MultiAssignmentNode : Node
 {
-    public string Name { get; }
-    public IEnumerable<double> Sequence { get; }
+    public List<string> Identifiers { get; }
+    public SequenceNode Sequence { get; }
 
-    public InfiniteSequenceNode(IEnumerable<double> sequence, string name)
+    public MultiAssignmentNode(List<string> identifiers, SequenceNode sequence)
     {
+        Identifiers = identifiers;
         Sequence = sequence;
-        Name = name;
     }
 }
-public class ImportNode : Node
+/// <summary>
+/// Represents a node that holds an undefined value.
+/// </summary>
+public class UndefinedNode : Node
 {
-    public string FilePath { get; }
+    /// <summary>
+    /// Gets the value of the node.
+    /// </summary>
+    public static readonly UndefinedNode Value = new();
 
-    public ImportNode(string filePath)
+    /// <summary>
+    /// Private constructor to ensure that only one instance of UndefinedNode exists.
+    /// </summary>
+    private UndefinedNode() { }
+}
+public class GlobalConstNode : Node
+{
+    public string Identifier { get; }
+    public object Value { get; }
+
+    public GlobalConstNode(string identifier, Node value)
     {
-        FilePath = filePath;
+        Identifier = identifier;
+        Value = value;
     }
 }

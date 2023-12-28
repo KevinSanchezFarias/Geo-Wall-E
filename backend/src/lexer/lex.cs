@@ -129,7 +129,6 @@ public partial class Lexer
             "arc" => new Token(TokenType.Figure, result, Line, Column),
             "color" => new Token(TokenType.ColorKeyword, result, Line, Column),
             "restore" => new Token(TokenType.RestoreKeyword, result, Line, Column),
-            "const" => new Token(TokenType.Const, result, Line, Column),
             "flinq" => new Token(TokenType.Flinq, result, Line, Column),
             "llinq" => new Token(TokenType.LLinq, result, Line, Column),
             "let" => new Token(TokenType.LetKeyword, result, Line, Column),

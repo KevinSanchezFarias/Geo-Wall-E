@@ -4,7 +4,6 @@ namespace Tokens;
 /// </summary>
 public enum TokenType
 {
-    Const,
     Flinq,
     LLinq,
     LParen,
