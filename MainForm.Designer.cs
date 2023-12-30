@@ -37,7 +37,6 @@ partial class MainForm
         errorTextBox.ScrollBars = ScrollBars.Vertical;
         errorTextBox.ReadOnly = true;
         errorTextBox.Height = 75;
-        errorTextBox.ForeColor = ColorTranslator.FromHtml("#ed8796"); // Set the text color to #ed8796
         errorTextBox.BackColor = ColorTranslator.FromHtml("#363a4f"); // Set the background color to #363a4f
         errorTextBox.Width = (int)(this.ClientSize.Width * 0.7);
         errorTextBox.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;

@@ -1,9 +1,5 @@
 using Tokens;
 using Nodes;
-using System.Reflection;
-using Lists;
-using LexerAnalize;
-using EvaluatorAnalize;
 
 namespace ParserAnalize;
 public partial class Parser

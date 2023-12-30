@@ -1,4 +1,3 @@
-
 using Tokens;
 using Nodes;
 using System.Reflection;
@@ -8,6 +7,32 @@ namespace ParserAnalize;
 public partial class Parser
 {
     #region Figures
+    private Node ParsePointExpression
+    {
+        get
+        {
+            _ = ConsumeToken(TokenType.Point);
+            string name = CurrentToken?.Type == TokenType.LParen ? "" : ConsumeToken(TokenType.Identifier).Value;
+            Node x;
+            Node y;
+            if (CurrentToken?.Type == TokenType.LParen)
+            {
+                _ = ConsumeToken(TokenType.LParen);
+                x = ParseExpression();
+                _ = ConsumeToken(TokenType.Comma);
+                y = ParseExpression();
+                _ = ConsumeToken(TokenType.RParen);
+            }
+            else
+            {
+                x = null!;
+                y = null!;
+            }
+
+            return new PointNode(name, x, y);
+        }
+
+    }
     private Node ParseFigure()
     {
         var type = CurrentToken?.Value;
@@ -219,20 +244,25 @@ public partial class Parser
             _ = ConsumeToken(TokenType.MeasureKeyword);
             //Point 1
             _ = ConsumeToken(TokenType.LParen);
-            var p1 = (PointNode)ParseExpression();
-            if (p1 is not PointNode) throw new Exception($"Expected token {TokenType.Point}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
-
+            var p1 = ParseExpression();
             //Comma
             _ = ConsumeToken(TokenType.Comma);
             //Point 2 
-            var p2 = (PointNode)ParseExpression();
-            if (p2 is not PointNode) throw new Exception($"Expected token {TokenType.Point}, but found {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
-
+            var p2 = ParseExpression();
             _ = ConsumeToken(TokenType.RParen);
             return new MeasureNode(p1, p2);
 
         }
     }
+    private Node ParseIntersect(string name)
+    {
+        _ = ConsumeToken(TokenType.IntersectKeyword);
+        _ = ConsumeToken(TokenType.LParen);
+        var figure1 = ParseExpression();
+        _ = ConsumeToken(TokenType.Comma);
+        var figure2 = ParseExpression();
+        _ = ConsumeToken(TokenType.RParen);
+        return new IntersectNode(name, figure1, figure2, new List<PointNode>());
+    }
     #endregion
-
 }

@@ -14,7 +14,6 @@ public class Evaluator
     /// Represents a node in the abstract syntax tree (AST).
     /// </summary>
     private Node AST { get; set; }
-
     /// <summary>
     /// Initializes a new instance of the Evaluator class.
     /// </summary>
@@ -23,9 +22,8 @@ public class Evaluator
     {
         AST = ast;
     }
-
     private Dictionary<string, object> variables = new();
-
+    private readonly Stack<Dictionary<string, object>> scopes = new();
     /// <summary>
     /// Evaluates the abstract syntax tree (AST) and returns the result.
     /// </summary>
@@ -44,24 +42,16 @@ public class Evaluator
         if (drawNode.decl)
         {
             // Handle the case where the circle is declared and drawn in the same statement
-            if (drawNode.Figures is CircleNode circleNode)
+            return drawNode.Figures switch
             {
-                if (circleNode.Center != null && circleNode.Radius != null)
-                {
-                    LE.ToDraw toDraw = new()
-                    {
-                        name = circleNode.name,
-                        color = LE.Color.First(),
-                        figure = "CircleNode",
-                        points = new PointF[] { (PointF)Visit(node: circleNode.Center) },
-                        rad = (double)Visit(node: circleNode.Radius),
-                        comment = null!
-                    };
-                    LE.toDraws.Add(toDraw);
-                    return toDraw;
-                }
-            }
-            return null!;
+                CircleNode circleNode => CircleBuilder(circleNode),
+                LineNode lineNode => LineBuilder(lineNode),
+                SegmentNode segmentNode => SegBuilder(segmentNode),
+                RayNode rayNode => RayBuilder(rayNode),
+                ArcNode arcNode => ArcBuilder(arcNode),
+                PointNode pointNode => PointBuilder(pointNode),
+                _ => null!,
+            };
         }
         else
         {
@@ -73,153 +63,6 @@ public class Evaluator
             return null!;
         }
     }
-    /* public object Draw(DrawNode node)
-    {
-        if (node.Figures is SequenceNode sequenceNode)
-        {
-            var toDrawList = new List<ToDraw>();
-            foreach (var figure in sequenceNode.Nodes)
-            {
-                switch (figure)
-                {
-                    case CircleNode cNode:
-                        BuildCircleNode(toDrawList, cNode);
-                        break;
-                    case LineNode lineNode:
-                        BuildLineNode(toDrawList, lineNode);
-                        break;
-                    case SegmentNode segmentNode:
-                        BuildSegmentNode(toDrawList, segmentNode);
-                        break;
-                    case RayNode rayNode:
-                        BuildRayNode(toDrawList, rayNode);
-                        break;
-                    case ArcNode arcNode:
-                        BuildArcNode(toDrawList, arcNode);
-                        break;
-                    case PointNode pointNode:
-                        BuildPointNode(toDrawList, pointNode);
-                        break;
-                    default:
-                        throw new Exception($"Unexpected node type {figure.GetType()}");
-                }
-            }
-            return toDrawList;
-        }
-        else
-        {
-            var points = node.Figures switch
-            {
-                PointNode pointNode => new() { new PointF((float)pointNode.X, (float)pointNode.Y) },
-                CircleNode cNode => new() { new PointF((float)cNode.Center.X, (float)cNode.Center.Y) },
-                LineNode lineNode => new() { new PointF((float)lineNode.A.X, (float)lineNode.A.Y), new PointF((float)lineNode.B.X, (float)lineNode.B.Y) },
-                SegmentNode segmentNode => new() { new PointF((float)segmentNode.A.X, (float)segmentNode.A.Y), new PointF((float)segmentNode.B.X, (int)segmentNode.B.Y) },
-                RayNode rayNode => new() { new PointF((float)rayNode.P1.X, (float)rayNode.P1.Y), new PointF((float)rayNode.P2.X, (float)rayNode.P2.Y) },
-                ArcNode arcNode => new List<PointF> { new((float)arcNode.P1.X, (float)arcNode.P1.Y), new((float)arcNode.P2.X, (float)arcNode.P2.Y), new((float)arcNode.P3.X, (float)arcNode.P3.Y) },
-                _ => throw new Exception($"Unexpected node type {node.Figures.GetType()}")
-            };
-            var comment = node.Figures switch
-            {
-                CircleNode cNode => cNode.Comment as ValueNode,
-                LineNode lineNode => lineNode.Comment as ValueNode,
-                SegmentNode segmentNode => segmentNode.Comment as ValueNode,
-                RayNode rayNode => rayNode.Comment as ValueNode,
-                ArcNode arcNode => arcNode.Comment as ValueNode,
-                _ => null
-            };
-            var toDraw = new ToDraw
-            {
-                color = LE.Color.First(),
-                figure = node.Figures.GetType().Name,
-                points = points.ToArray(),
-                rad = node.Figures is CircleNode circleNode ? (double)Visit(circleNode.Radius) : 0,
-                comment = comment?.Value.ToString() ?? ""
-            };
-            return toDraw;
-        }
-        #region BuildFinalNodes
-        void BuildCircleNode(List<ToDraw> toDrawList, CircleNode cNode)
-        {
-            var points = new List<PointF> { new((float)cNode.Center.X, (float)cNode.Center.Y) };
-            var comment = cNode.Comment as ValueNode;
-            var toDraw = new ToDraw
-            {
-                color = LE.Color.First(),
-                figure = cNode.GetType().Name,
-                points = points.ToArray(),
-                rad = (double)Visit(cNode.Radius),
-                comment = comment?.Value.ToString() ?? ""
-            };
-            toDrawList.Add(toDraw);
-        }
-        void BuildLineNode(List<ToDraw> toDrawList, LineNode lineNode)
-        {
-            var points = new List<PointF> { new((int)lineNode.A.X, (int)lineNode.A.Y), new((int)lineNode.B.X, (int)lineNode.B.Y) };
-            var comment = lineNode.Comment as ValueNode;
-            var toDraw = new ToDraw
-            {
-                color = LE.Color.First(),
-                figure = lineNode.GetType().Name,
-                points = points.ToArray(),
-                rad = 0,
-                comment = comment?.Value.ToString() ?? ""
-            };
-            toDrawList.Add(toDraw);
-        }
-        void BuildSegmentNode(List<ToDraw> toDrawList, SegmentNode segmentNode)
-        {
-            var points = new List<PointF> { new((int)segmentNode.A.X, (int)segmentNode.A.Y), new((int)segmentNode.B.X, (int)segmentNode.B.Y) };
-            var comment = segmentNode.Comment as ValueNode;
-            var toDraw = new ToDraw
-            {
-                color = LE.Color.First(),
-                figure = segmentNode.GetType().Name,
-                points = points.ToArray(),
-                rad = 0,
-                comment = comment?.Value.ToString() ?? ""
-            };
-            toDrawList.Add(toDraw);
-        }
-        void BuildRayNode(List<ToDraw> toDrawList, RayNode rayNode)
-        {
-            var points = new List<PointF> { new((int)rayNode.P1.X, (int)rayNode.P1.Y), new((int)rayNode.P2.X, (int)rayNode.P2.Y) };
-            var comment = rayNode.Comment as ValueNode;
-            var toDraw = new ToDraw
-            {
-                color = LE.Color.First(),
-                figure = rayNode.GetType().Name,
-                points = points.ToArray(),
-                rad = 0,
-                comment = comment?.Value.ToString() ?? ""
-            };
-            toDrawList.Add(toDraw);
-        }
-        void BuildArcNode(List<ToDraw> toDrawList, ArcNode arcNode)
-        {
-            var points = new List<PointF> { new((int)arcNode.P1.X, (int)arcNode.P1.Y), new((int)arcNode.P2.X, (int)arcNode.P2.Y), new((int)arcNode.P3.X, (int)arcNode.P3.Y) };
-            var comment = arcNode.Comment as ValueNode;
-            var toDraw = new ToDraw
-            {
-                color = LE.Color.First(),
-                figure = arcNode.GetType().Name,
-                points = points.ToArray(),
-            };
-            toDrawList.Add(toDraw);
-        }
-        void BuildPointNode(List<ToDraw> toDrawList, PointNode pointNode)
-        {
-            var points = new List<PointF> { new((int)pointNode.X, (int)pointNode.Y) };
-            var toDraw = new ToDraw
-            {
-                color = LE.Color.First(),
-                figure = pointNode.GetType().Name,
-                points = points.ToArray(),
-                rad = 0,
-            };
-            toDrawList.Add(toDraw);
-        }
-        #endregion
-    } */
     /// <summary>
     /// Visits a given node and performs the corresponding evaluation logic based on the node type.
     /// </summary>
@@ -249,8 +92,8 @@ public class Evaluator
                 return InvokeDeclaredFunctionsHandler(functionCallNode);
             case FunctionPredefinedNode functionPredefinedNode:
                 return FunctionPredefinedHandler(functionPredefinedNode);
-            /* case MeasureNode measureNode:
-                return MeasureNodeHandler(measureNode); */
+            case MeasureNode measureNode:
+                return MeasureNodeHandler(measureNode);
             case BinaryExpressionNode binaryExpressionNode:
                 return BinaryHandler(binaryExpressionNode);
             case IfExpressionNode ifExpressionNode:
@@ -322,26 +165,46 @@ public class Evaluator
                 throw new Exception($"Invalid condition type {condition.GetType()}");
             }
         }
+
         object MultipleVarHandler(MultipleVariableDeclarationNode multipleVarDecl)
         {
+            scopes.Push(new Dictionary<string, object>()); // Enter a new scope
+
             foreach (var varDecl in multipleVarDecl.Declarations)
             {
-                variables[varDecl.Identifier] = Visit(varDecl.Value);
+                scopes.Peek()[varDecl.Identifier] = Visit(varDecl.Value);
             }
-            return Visit(multipleVarDecl.Body);
+
+            var result = Visit(multipleVarDecl.Body);
+
+            scopes.Pop(); // Leave the scope
+
+            return result;
         }
+
         object VarHandler(VariableDeclarationNode varDecl)
         {
-            variables[varDecl.Identifier] = Visit(varDecl.Value);
-            return Visit(varDecl.Body);
+            scopes.Push(new Dictionary<string, object>()); // Enter a new scope
+
+            scopes.Peek()[varDecl.Identifier] = Visit(varDecl.Value);
+
+            var result = Visit(varDecl.Body);
+
+            scopes.Pop(); // Leave the scope
+
+            return result;
         }
         object IdentifierHandler(IdentifierNode identifierNode)
         {
-            if (variables.TryGetValue(identifierNode.Identifier, out var value))
+            // Check if the variable is in scope
+            foreach (var scope in scopes)
             {
-                return value;
+                if (scope.TryGetValue(identifierNode.Identifier, out var value))
+                {
+                    return value;
+                }
             }
-            else if (LE.poiND.Any(p => p.Key == identifierNode.Identifier))
+            if (LE.poiND.Any(p => p.Key == identifierNode.Identifier))
             {
                 return LE.poiND.First(p => p.Key == identifierNode.Identifier).Value;
             }
@@ -402,17 +265,21 @@ public class Evaluator
 
             return result;
         }
-        /* object MeasureNodeHandler(MeasureNode measureNode)
-        {
-            if (measureNode.P1 is PointNode pointNodeA && measureNode.P2 is PointNode pointNodeB)
-            {
-                var x = pointNodeA.X - pointNodeB.X;
-                var y = pointNodeA.Y - pointNodeB.Y;
-                return Math.Sqrt((x * x) + (y * y));
-            }
-            throw new Exception($"Invalid measure node {measureNode} passed to measure handler, is it possible to even get here?");
-        } */
         #endregion
+    }
+
+    private object MeasureNodeHandler(MeasureNode measureNode)
+    {
+        // Evaluate the nodes and cast them to PointF
+        var point1 = (PointF)Visit(measureNode.P1);
+        var point2 = (PointF)Visit(measureNode.P2);
+
+        // Calculate the distance between the points
+        var dx = point2.X - point1.X;
+        var dy = point2.Y - point1.Y;
+        var distance = Math.Sqrt(dx * dx + dy * dy);
+
+        return distance;
     }
 
     /// <summary>
@@ -432,7 +299,6 @@ public class Evaluator
             _ => throw new Exception($"Unexpected node type {figure.GetType()}"),
         };
     }
-
     /// <summary>
     /// Handles the ArcNode object and adds it to the drawing list.
     /// </summary>
@@ -461,29 +327,30 @@ public class Evaluator
         }
         else
         {
-            // Handle the case where the arc has specified center, points, and measure
-            if (arcNode.Center != null && arcNode.P1 != null && arcNode.P2 != null && arcNode.Measure != null)
-            {
-                LE.ToDraw toDraw = new()
-                {
-                    name = arcNode.Name,
-                    color = LE.Color.First(),
-                    figure = "ArcNode",
-                    points = new PointF[]
-                    {
-                        (PointF)Visit(node: arcNode.Center),
-                        (PointF)Visit(node: arcNode.P1),
-                        (PointF)Visit(node: arcNode.P2)
-                    },
-                    rad = (double)Visit(node: arcNode.Measure),
-                    comment = null!
-                };
-                LE.toDraws.Add(toDraw);
-            }
+            ArcBuilder(arcNode);
             return null!;
         }
     }
+    private LE.ToDraw ArcBuilder(ArcNode arcNode)
+    {
 
+        LE.ToDraw toDraw = new()
+        {
+            name = arcNode.Name,
+            color = LE.Color.First(),
+            figure = "ArcNode",
+            points = new PointF[]
+            {
+                (PointF)Visit(node: arcNode.Center),
+                (PointF)Visit(node: arcNode.P1),
+                (PointF)Visit(node: arcNode.P2)
+            },
+            rad = (double)Visit(node: arcNode.Measure),
+            comment = null!
+        };
+        return toDraw;
+
+    }
     /// <summary>
     /// Handles the evaluation of a RayNode object.
     /// </summary>
@@ -510,27 +377,28 @@ public class Evaluator
         }
         else
         {
-            // Handle the case where the ray has specified points
-            if (rayNode.P1 != null && rayNode.P2 != null)
-            {
-                LE.ToDraw toDraw = new()
-                {
-                    name = rayNode.Name,
-                    color = LE.Color.First(),
-                    figure = "RayNode",
-                    points = new PointF[]
-                    {
-                        (PointF)Visit(node: rayNode.P1),
-                        (PointF)Visit(node: rayNode.P2)
-                    },
-                    comment = null!
-                };
-                LE.toDraws.Add(toDraw);
-            }
+            LE.toDraws.Add(RayBuilder(rayNode));
             return null!;
         }
     }
+    private LE.ToDraw RayBuilder(RayNode rayNode)
+    {
 
+        LE.ToDraw toDraw = new()
+        {
+            name = rayNode.Name,
+            color = LE.Color.First(),
+            figure = "RayNode",
+            points = new PointF[]
+            {
+                (PointF)Visit(node: rayNode.P1),
+                (PointF)Visit(node: rayNode.P2)
+            },
+            comment = null!
+        };
+        return toDraw;
+
+    }
     /// <summary>
     /// Handles the evaluation of a SegmentNode object.
     /// </summary>
@@ -557,27 +425,28 @@ public class Evaluator
         }
         else
         {
-            // Handle the case where the segment has specified points
-            if (segmentNode.A != null && segmentNode.B != null)
-            {
-                LE.ToDraw toDraw = new()
-                {
-                    name = segmentNode.Name,
-                    color = LE.Color.First(),
-                    figure = "SegmentNode",
-                    points = new PointF[]
-                    {
-                        (PointF)Visit(node: segmentNode.A),
-                        (PointF)Visit(node: segmentNode.B)
-                    },
-                    comment = null!
-                };
-                LE.toDraws.Add(toDraw);
-            }
+            LE.toDraws.Add(SegBuilder(segmentNode));
             return null!;
         }
     }
+    private LE.ToDraw SegBuilder(SegmentNode segmentNode)
+    {
 
+        LE.ToDraw toDraw = new()
+        {
+            name = segmentNode.Name,
+            color = LE.Color.First(),
+            figure = "SegmentNode",
+            points = new PointF[]
+            {
+                (PointF)Visit(node: segmentNode.A),
+                (PointF)Visit(node: segmentNode.B)
+            },
+            comment = null!
+        };
+        return toDraw;
+
+    }
     /// <summary>
     /// Handles the LineNode and adds the corresponding drawing information to the toDraws collection.
     /// </summary>
@@ -604,27 +473,26 @@ public class Evaluator
         }
         else
         {
-            // Handle the case where the line has specified points
-            if (lineNode.A != null && lineNode.B != null)
-            {
-                LE.ToDraw toDraw = new()
-                {
-                    name = lineNode.Name,
-                    color = LE.Color.First(),
-                    figure = "LineNode",
-                    points = new PointF[]
-                    {
-                        (PointF)Visit(node: lineNode.A),
-                        (PointF)Visit(node: lineNode.B)
-                    },
-                    comment = null!
-                };
-                LE.toDraws.Add(toDraw);
-            }
+            LE.toDraws.Add(LineBuilder(lineNode));
             return null!;
         }
     }
-
+    private LE.ToDraw LineBuilder(LineNode lineNode)
+    {
+        LE.ToDraw toDraw = new()
+        {
+            name = lineNode.Name,
+            color = LE.Color.First(),
+            figure = "LineNode",
+            points = new PointF[]
+            {
+                (PointF)Visit(node: lineNode.A),
+                (PointF)Visit(node: lineNode.B)
+            },
+            comment = null!
+        };
+        return toDraw;
+    }
     /// <summary>
     /// Handles the evaluation of a CircleNode object.
     /// </summary>
@@ -639,7 +507,7 @@ public class Evaluator
                 name = circleNode.name,
                 color = LE.Color.First(),
                 figure = "CircleNode",
-                points = new PointF[] { new(new Random().Next(150, 300), new Random().Next(150, 300)) },
+                points = new PointF[] { new(x: new Random().Next(150, 300), y: new Random().Next(150, 300)) },
                 rad = new Random().Next(0, 500),
                 comment = null!
             };
@@ -648,24 +516,23 @@ public class Evaluator
         }
         else
         {
-            // Handle the case where the circle has a specified center and radius
-            if (circleNode.Center != null && circleNode.Radius != null)
-            {
-                LE.ToDraw toDraw = new()
-                {
-                    name = circleNode.name,
-                    color = LE.Color.First(),
-                    figure = "CircleNode",
-                    points = new PointF[] { (PointF)Visit(node: circleNode.Center) },
-                    rad = (double)Visit(node: circleNode.Radius),
-                    comment = null!
-                };
-                LE.toDraws.Add(toDraw);
-            }
+            LE.toDraws.Add(CircleBuilder(circleNode));
             return null!;
         }
     }
-
+    private LE.ToDraw CircleBuilder(CircleNode circleNode)
+    {
+        LE.ToDraw toDraw = new()
+        {
+            name = circleNode.name,
+            color = LE.Color.First(),
+            figure = "CircleNode",
+            points = new PointF[] { (PointF)Visit(node: circleNode.Center) },
+            rad = (double)Visit(node: circleNode.Radius),
+            comment = null!,
+        };
+        return toDraw;
+    }
     /// <summary>
     /// Handles a PointNode object.
     /// </summary>
@@ -680,12 +547,15 @@ public class Evaluator
         }
         else
         {
-            LE.poiND.Add(pointNode.Name, new PointF((float)Visit(node: pointNode.X), (float)Visit(node: pointNode.Y)));
+            var point = PointBuilder(pointNode);
+            LE.poiND.Add(pointNode.Name, point.Item2); // Add the PointF to the dictionary
             return null!;
         }
-
     }
-
+    private (string, PointF) PointBuilder(PointNode pointNode)
+    {
+        return (pointNode.Name, new PointF(Convert.ToSingle(Visit(node: pointNode.X)), Convert.ToSingle(Visit(node: pointNode.Y))));
+    }
     private object GlobalConstNodeHandler(GlobalConstNode globalConstNode)
     {
         var matchingNode = LE.DeclaredConst.FirstOrDefault(node => node.Identifier == globalConstNode.Identifier);
@@ -729,457 +599,6 @@ public class Evaluator
 
         return null!;
     }
-    /* private object IntersectHandler(IntersectNode intersectNode)
-    {
-        // Evaluate the intersection of the two figures
-        var intersectionPoints = EvaluateIntersection(intersectNode.Figure1, intersectNode.Figure2);
-        // Create a PointNode for each intersection point and add it to a list
-        var pointNodes = intersectionPoints.Select((point, index) => new PointNode($"Point{index}", point.X, point.Y)).ToList();
-        // Cast the list of PointNode objects to a list of Node objects
-        var nodes = pointNodes.Cast<Node>().ToList();
-        // Create a SequenceNode with the nodes
-        var sequenceNode = new SequenceNode(nodes, intersectNode.SeqName);
-        // Add the SequenceNode to Seqs
-        if (sequenceNode.Nodes.Count == 0)
-        {
-            throw new Exception("No intercept in the figures repeat");
-        }
-        else
-        {
-            LE.Seqs.Add(sequenceNode);
-            return null!;
-        }
-    } */
-    /// <summary>
-    /// Indicates whether the "wtf" flag is set. XD
-    /// </summary>
-    private static bool wtf = false;
-
-    /// <summary>
-    /// Evaluates the intersection between two figures and returns a collection of intersection points.
-    /// </summary>
-    /// <param name="figure1">The first figure.</param>
-    /// <param name="figure2">The second figure.</param>
-    /// <returns>A collection of intersection points.</returns>
-    /* private IEnumerable<PointNode> EvaluateIntersection(Node figure1, Node figure2)
-    {
-        var intersectionPoints = new List<PointNode>();
-        #region AvailableFigures
-        //If both figs are the same tape and same properties return an error
-        if (figure1.GetType() == figure2.GetType() && figure1 == figure2)
-        {
-            throw new Exception("Cannot intersect the same figure, infinite intersections");
-        }
-        if (figure1 is CircleNode circle1 && figure2 is CircleNode circle2)
-        {
-            double c1r = (double)Visit(circle1.Radius);
-            double c2r = (double)Visit(circle2.Radius);
-            double dx = circle2.Center.X - circle1.Center.X;
-            double dy = circle2.Center.Y - circle1.Center.Y;
-            double d = Math.Sqrt(dx * dx + dy * dy);
-
-            // Check if there's no solution
-            if (d > c1r + c2r)
-            {
-                // The circles are separate
-                return intersectionPoints;
-            }
-            if (d < Math.Abs(c1r - c2r))
-            {
-                // One circle is contained within the other
-                return intersectionPoints;
-            }
-
-            double a = (c1r * c1r - c2r * c2r + d * d) / (2.0 * d);
-            double h = Math.Sqrt(c1r * c1r - a * a);
-
-            double cx2 = circle1.Center.X + a * dx / d;
-            double cy2 = circle1.Center.Y + a * dy / d;
-
-            // Get the points of intersection
-            double intersectionX1 = cx2 + h * dy / d;
-            double intersectionY1 = cy2 - h * dx / d;
-            double intersectionX2 = cx2 - h * dy / d;
-            double intersectionY2 = cy2 + h * dx / d;
-
-            intersectionPoints.Add(new PointNode("Intersection1", intersectionX1, intersectionY1));
-            intersectionPoints.Add(new PointNode("Intersection2", intersectionX2, intersectionY2));
-        }
-        else if (figure1 is CircleNode circle3 && figure2 is LineNode line1)
-        {
-            double c1r = (double)Visit(circle3.Radius);
-            double dx = line1.B.X - line1.A.X;
-            double dy = line1.B.Y - line1.A.Y;
-            double dr = Math.Sqrt(dx * dx + dy * dy);
-            double D = line1.A.X * line1.B.Y - line1.B.X * line1.A.Y;
-            double discriminant = c1r * c1r * dr * dr - D * D;
-
-            // Check if there's no solution
-            if (discriminant < 0)
-            {
-                // The circle and line are separate
-                return intersectionPoints;
-            }
-
-            double x1 = (D * dy + Math.Sign(dy) * dx * Math.Sqrt(discriminant)) / (dr * dr);
-            double x2 = (D * dy - Math.Sign(dy) * dx * Math.Sqrt(discriminant)) / (dr * dr);
-            double y1 = (-D * dx + Math.Abs(dy) * Math.Sqrt(discriminant)) / (dr * dr);
-            double y2 = (-D * dx - Math.Abs(dy) * Math.Sqrt(discriminant)) / (dr * dr);
-
-            intersectionPoints.Add(new PointNode("Intersection1", x1, y1));
-            intersectionPoints.Add(new PointNode("Intersection2", x2, y2));
-        }
-        else if (figure1 is CircleNode circle4 && figure2 is RayNode ray1)
-        {
-            double c1r = (double)Visit(circle4.Radius);
-            double dx = ray1.P2.X - ray1.P1.X;
-            double dy = ray1.P2.Y - ray1.P1.Y;
-            double dr = Math.Sqrt(dx * dx + dy * dy);
-            double D = ray1.P1.X * ray1.P2.Y - ray1.P2.X * ray1.P1.Y;
-            double discriminant = c1r * c1r * dr * dr - D * D;
-
-            // Check if there's no solution
-            if (discriminant < 0)
-            {
-                // The circle and ray are separate
-                return intersectionPoints;
-            }
-
-            double x1 = (D * dy + Math.Sign(dy) * dx * Math.Sqrt(discriminant)) / (dr * dr);
-            double x2 = (D * dy - Math.Sign(dy) * dx * Math.Sqrt(discriminant)) / (dr * dr);
-            double y1 = (-D * dx + Math.Abs(dy) * Math.Sqrt(discriminant)) / (dr * dr);
-            double y2 = (-D * dx - Math.Abs(dy) * Math.Sqrt(discriminant)) / (dr * dr);
-
-            intersectionPoints.Add(new PointNode("Intersection1", x1, y1));
-            intersectionPoints.Add(new PointNode("Intersection2", x2, y2));
-        }
-        else if (figure1 is CircleNode circle5 && figure2 is ArcNode arc1)
-        {
-            double c1r = (double)Visit(circle5.Radius);
-            double dx = arc1.P2.X - arc1.P1.X;
-            double dy = arc1.P2.Y - arc1.P1.Y;
-            double dr = Math.Sqrt(dx * dx + dy * dy);
-            double D = arc1.P1.X * arc1.P2.Y - arc1.P2.X * arc1.P1.Y;
-            double discriminant = c1r * c1r * dr * dr - D * D;
-
-            // Check if there's no solution
-            if (discriminant < 0)
-            {
-                // The circle and arc are separate
-                return intersectionPoints;
-            }
-
-            double x1 = (D * dy + Math.Sign(dy) * dx * Math.Sqrt(discriminant)) / (dr * dr);
-            double x2 = (D * dy - Math.Sign(dy) * dx * Math.Sqrt(discriminant)) / (dr * dr);
-            double y1 = (-D * dx + Math.Abs(dy) * Math.Sqrt(discriminant)) / (dr * dr);
-            double y2 = (-D * dx - Math.Abs(dy) * Math.Sqrt(discriminant)) / (dr * dr);
-
-            intersectionPoints.Add(new PointNode("Intersection1", x1, y1));
-            intersectionPoints.Add(new PointNode("Intersection2", x2, y2));
-        }
-        else if (figure1 is CircleNode circle6 && figure2 is SegmentNode segment3)
-        {
-            double c1r = (double)Visit(circle6.Radius);
-            double dx = segment3.B.X - segment3.A.X;
-            double dy = segment3.B.Y - segment3.A.Y;
-            double dr = Math.Sqrt(dx * dx + dy * dy);
-            double D = segment3.A.X * segment3.B.Y - segment3.B.X * segment3.A.Y;
-            double discriminant = c1r * c1r * dr * dr - D * D;
-
-            // Check if there's no solution
-            if (discriminant < 0)
-            {
-                // The circle and segment are separate
-                return intersectionPoints;
-            }
-
-            double x1 = (D * dy + Math.Sign(dy) * dx * Math.Sqrt(discriminant)) / (dr * dr);
-            double x2 = (D * dy - Math.Sign(dy) * dx * Math.Sqrt(discriminant)) / (dr * dr);
-            double y1 = (-D * dx + Math.Abs(dy) * Math.Sqrt(discriminant)) / (dr * dr);
-            double y2 = (-D * dx - Math.Abs(dy) * Math.Sqrt(discriminant)) / (dr * dr);
-
-            intersectionPoints.Add(new PointNode("Intersection1", x1, y1));
-            intersectionPoints.Add(new PointNode("Intersection2", x2, y2));
-        }
-        else if (figure1 is LineNode line2 && figure2 is LineNode line3)
-        {
-            double a1 = line2.B.Y - line2.A.Y;
-            double b1 = line2.A.X - line2.B.X;
-            double c1 = a1 * line2.A.X + b1 * line2.A.Y;
-
-            double a2 = line3.B.Y - line3.A.Y;
-            double b2 = line3.A.X - line3.B.X;
-            double c2 = a2 * line3.A.X + b2 * line3.A.Y;
-
-            double delta = a1 * b2 - a2 * b1;
-
-            // If lines are parallel, the result is a empty list.
-            if (delta == 0)
-            {
-                return new List<PointNode>();
-            }
-
-            // Calculate the intersection point
-            double x = (b2 * c1 - b1 * c2) / delta;
-            double y = (a1 * c2 - a2 * c1) / delta;
-
-            intersectionPoints.Add(new PointNode("Intersection", x, y));
-        }
-        else if (figure1 is LineNode line4 && figure2 is RayNode ray2)
-        {
-            double a1 = line4.B.Y - line4.A.Y;
-            double b1 = line4.A.X - line4.B.X;
-            double c1 = a1 * line4.A.X + b1 * line4.A.Y;
-
-            double a2 = ray2.P2.Y - ray2.P1.Y;
-            double b2 = ray2.P1.X - ray2.P2.X;
-            double c2 = a2 * ray2.P1.X + b2 * ray2.P1.Y;
-
-            double delta = a1 * b2 - a2 * b1;
-
-            // If lines are parallel, the result is a empty list.
-            if (delta == 0)
-            {
-                return new List<PointNode>();
-            }
-
-            // Calculate the intersection point
-            double x = (b2 * c1 - b1 * c2) / delta;
-            double y = (a1 * c2 - a2 * c1) / delta;
-
-            intersectionPoints.Add(new PointNode("Intersection", x, y));
-        }
-        else if (figure1 is LineNode line5 && figure2 is ArcNode arc2)
-        {
-            double a1 = line5.B.Y - line5.A.Y;
-            double b1 = line5.A.X - line5.B.X;
-            double c1 = a1 * line5.A.X + b1 * line5.A.Y;
-
-            double a2 = arc2.P2.Y - arc2.P1.Y;
-            double b2 = arc2.P1.X - arc2.P2.X;
-            double c2 = a2 * arc2.P1.X + b2 * arc2.P1.Y;
-
-            double delta = a1 * b2 - a2 * b1;
-
-            // If lines are parallel, the result is a empty list.
-            if (delta == 0)
-            {
-                return new List<PointNode>();
-            }
-
-            // Calculate the intersection point
-            double x = (b2 * c1 - b1 * c2) / delta;
-            double y = (a1 * c2 - a2 * c1) / delta;
-
-            intersectionPoints.Add(new PointNode("Intersection", x, y));
-        }
-        else if (figure1 is LineNode line6 && figure2 is SegmentNode segment5)
-        {
-            double a1 = line6.B.Y - line6.A.Y;
-            double b1 = line6.A.X - line6.B.X;
-            double c1 = a1 * line6.A.X + b1 * line6.A.Y;
-
-            double a2 = segment5.B.Y - segment5.A.Y;
-            double b2 = segment5.A.X - segment5.B.X;
-            double c2 = a2 * segment5.A.X + b2 * segment5.A.Y;
-
-            double delta = a1 * b2 - a2 * b1;
-
-            // If lines are parallel, the result is a empty list.
-            if (delta == 0)
-            {
-                return new List<PointNode>();
-            }
-
-            // Calculate the intersection point
-            double x = (b2 * c1 - b1 * c2) / delta;
-            double y = (a1 * c2 - a2 * c1) / delta;
-
-            intersectionPoints.Add(new PointNode("Intersection", x, y));
-        }
-        else if (figure1 is SegmentNode segment1 && figure2 is SegmentNode segment2)
-        {
-            double a1 = segment1.B.Y - segment1.A.Y;
-            double b1 = segment1.A.X - segment1.B.X;
-            double c1 = a1 * segment1.A.X + b1 * segment1.A.Y;
-
-            double a2 = segment2.B.Y - segment2.A.Y;
-            double b2 = segment2.A.X - segment2.B.X;
-            double c2 = a2 * segment2.A.X + b2 * segment2.A.Y;
-
-            double delta = a1 * b2 - a2 * b1;
-
-            // If lines are parallel, the result is a empty list.
-            if (delta == 0)
-            {
-                return new List<PointNode>();
-            }
-
-            // Calculate the intersection point
-            double x = (b2 * c1 - b1 * c2) / delta;
-            double y = (a1 * c2 - a2 * c1) / delta;
-
-            // Check if the intersection point is on both segments
-            if (x >= Math.Min(segment1.A.X, segment1.B.X) && x <= Math.Max(segment1.A.X, segment1.B.X) &&
-                y >= Math.Min(segment1.A.Y, segment1.B.Y) && y <= Math.Max(segment1.A.Y, segment1.B.Y) &&
-                x >= Math.Min(segment2.A.X, segment2.B.X) && x <= Math.Max(segment2.A.X, segment2.B.X) &&
-                y >= Math.Min(segment2.A.Y, segment2.B.Y) && y <= Math.Max(segment2.A.Y, segment2.B.Y))
-            {
-                intersectionPoints.Add(new PointNode("Intersection", x, y));
-            }
-        }
-        else if (figure1 is SegmentNode segment && figure2 is RayNode ray)
-        {
-            double a1 = segment.B.Y - segment.A.Y;
-            double b1 = segment.A.X - segment.B.X;
-            double c1 = a1 * segment.A.X + b1 * segment.A.Y;
-
-            double a2 = ray.P2.Y - ray.P1.Y;
-            double b2 = ray.P1.X - ray.P2.X;
-            double c2 = a2 * ray.P1.X + b2 * ray.P1.Y;
-
-            double delta = a1 * b2 - a2 * b1;
-
-            // If lines are parallel, the result is a empty list.
-            if (delta == 0)
-            {
-                return new List<PointNode>();
-            }
-
-            // Calculate the intersection point
-            double x = (b2 * c1 - b1 * c2) / delta;
-            double y = (a1 * c2 - a2 * c1) / delta;
-
-            // Check if the intersection point is on both segment and ray
-            if (x >= Math.Min(segment.A.X, segment.B.X) && x <= Math.Max(segment.A.X, segment.B.X) &&
-                y >= Math.Min(segment.A.Y, segment.B.Y) && y <= Math.Max(segment.A.Y, segment.B.Y) &&
-                x >= Math.Min(ray.P1.X, ray.P2.X) && x <= Math.Max(ray.P1.X, ray.P2.X) &&
-                y >= Math.Min(ray.P1.Y, ray.P2.Y) && y <= Math.Max(ray.P1.Y, ray.P2.Y))
-            {
-                intersectionPoints.Add(new PointNode("Intersection", x, y));
-            }
-        }
-        else if (figure1 is SegmentNode segment4 && figure2 is ArcNode arc6)
-        {
-            double a1 = segment4.B.Y - segment4.A.Y;
-            double b1 = segment4.A.X - segment4.B.X;
-            double c1 = a1 * segment4.A.X + b1 * segment4.A.Y;
-
-            double a2 = arc6.P2.Y - arc6.P1.Y;
-            double b2 = arc6.P1.X - arc6.P2.X;
-            double c2 = a2 * arc6.P1.X + b2 * arc6.P1.Y;
-
-            double delta = a1 * b2 - a2 * b1;
-
-            // If lines are parallel, the result is a empty list.
-            if (delta == 0)
-            {
-                return new List<PointNode>();
-            }
-
-            // Calculate the intersection point
-            double x = (b2 * c1 - b1 * c2) / delta;
-            double y = (a1 * c2 - a2 * c1) / delta;
-
-            // Check if the intersection point is on both segment and arc
-            if (x >= Math.Min(segment4.A.X, segment4.B.X) && x <= Math.Max(segment4.A.X, segment4.B.X) &&
-                y >= Math.Min(segment4.A.Y, segment4.B.Y) && y <= Math.Max(segment4.A.Y, segment4.B.Y) &&
-                x >= Math.Min(arc6.P1.X, arc6.P2.X) && x <= Math.Max(arc6.P1.X, arc6.P2.X) &&
-                y >= Math.Min(arc6.P1.Y, arc6.P2.Y) && y <= Math.Max(arc6.P1.Y, arc6.P2.Y))
-            {
-                intersectionPoints.Add(new PointNode("Intersection", x, y));
-            }
-
-        }
-        else if (figure1 is RayNode ray3 && figure2 is RayNode ray4)
-        {
-            double a1 = ray3.P2.Y - ray3.P1.Y;
-            double b1 = ray3.P1.X - ray3.P2.X;
-            double c1 = a1 * ray3.P1.X + b1 * ray3.P1.Y;
-
-            double a2 = ray4.P2.Y - ray4.P1.Y;
-            double b2 = ray4.P1.X - ray4.P2.X;
-            double c2 = a2 * ray4.P1.X + b2 * ray4.P1.Y;
-
-            double delta = a1 * b2 - a2 * b1;
-
-            // If lines are parallel, the result is a empty list.
-            if (delta == 0)
-            {
-                return new List<PointNode>();
-            }
-
-            // Calculate the intersection point
-            double x = (b2 * c1 - b1 * c2) / delta;
-            double y = (a1 * c2 - a2 * c1) / delta;
-
-            intersectionPoints.Add(new PointNode("Intersection", x, y));
-        }
-        else if (figure1 is RayNode ray6 && figure2 is ArcNode arc)
-        {
-            double a1 = ray6.P2.Y - ray6.P1.Y;
-            double b1 = ray6.P1.X - ray6.P2.X;
-            double c1 = a1 * ray6.P1.X + b1 * ray6.P1.Y;
-
-            double a2 = arc.P2.Y - arc.P1.Y;
-            double b2 = arc.P1.X - arc.P2.X;
-            double c2 = a2 * arc.P1.X + b2 * arc.P1.Y;
-
-            double delta = a1 * b2 - a2 * b1;
-
-            // If lines are parallel, the result is a empty list.
-            if (delta == 0)
-            {
-                return new List<PointNode>();
-            }
-
-            // Calculate the intersection point
-            double x = (b2 * c1 - b1 * c2) / delta;
-            double y = (a1 * c2 - a2 * c1) / delta;
-
-            intersectionPoints.Add(new PointNode("Intersection", x, y));
-        }
-        else if (figure1 is ArcNode arc4 && figure2 is ArcNode arc5)
-        {
-            double a1 = arc4.P2.Y - arc4.P1.Y;
-            double b1 = arc4.P1.X - arc4.P2.X;
-            double c1 = a1 * arc4.P1.X + b1 * arc4.P1.Y;
-
-            double a2 = arc5.P2.Y - arc5.P1.Y;
-            double b2 = arc5.P1.X - arc5.P2.X;
-            double c2 = a2 * arc5.P1.X + b2 * arc5.P1.Y;
-
-            double delta = a1 * b2 - a2 * b1;
-
-            // If lines are parallel, the result is a empty list.
-            if (delta == 0)
-            {
-                return new List<PointNode>();
-            }
-
-            // Calculate the intersection point
-            double x = (b2 * c1 - b1 * c2) / delta;
-            double y = (a1 * c2 - a2 * c1) / delta;
-
-            intersectionPoints.Add(new PointNode("Intersection", x, y));
-        }
-        else
-        {
-            if (wtf)
-            {
-                throw new Exception($"Unexpected figures {figure1.GetType()} and {figure2.GetType()}, how did you even get here?");
-            }
-            else
-            {
-                wtf = true;
-                //Conmute figures
-                (figure2, figure1) = (figure1, figure2);
-                return EvaluateIntersection(figure1, figure2);
-            }
-        }
-        #endregion
-        return intersectionPoints;
-    } */
     /// <summary>
     /// Handles the evaluation of a constant declaration node.
     /// </summary>
@@ -1190,6 +609,11 @@ public class Evaluator
         if (constDeclarationNode.Value is ValueNode valueNode)
         {
             variables[constDeclarationNode.Identifier] = valueNode.Value;
+        }
+        else if (constDeclarationNode.Value is Figure figure)
+        {
+            variables[constDeclarationNode.Identifier] = figure;
+            return null!;
         }
         else
         {

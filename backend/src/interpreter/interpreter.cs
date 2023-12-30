@@ -51,5 +51,5 @@ public class Interpreter
         }
     }
     /*Minified*/
-    private static void CleanFigs() { LE.toDraws.Clear(); LE.DeclaredConst.Clear(); LE.arcND.Clear(); LE.cirND.Clear(); LE.linND.Clear(); LE.poiND.Clear(); LE.rayND.Clear(); LE.segND.Clear(); LE.Seqs.Clear(); LE.Color.Clear(); LE.Color.Push(Brushes.White); }
+    private static void CleanFigs() { LE.toDraws.Clear(); LE.DeclaredConst.Clear(); LE.poiND.Clear(); LE.Seqs.Clear(); LE.Color.Clear(); LE.Color.Push(Brushes.White); }
 }

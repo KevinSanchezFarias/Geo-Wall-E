@@ -66,12 +66,17 @@ public partial class MainForm : Form
 
         foreach (var graphics in MiddleEnd.GSharp(textBox1.Text))
         {
-            if (graphics is string errorMessage)
+            if (graphics is string Message)
             {
-                ShowErrorMessage(errorMessage);
+                if (Message.StartsWith("Line:"))
+                    ShowMessage(Message, true);
+                else
+                    ShowMessage("\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/", false);
+                ShowMessage(Message, false);
             }
             else if (graphics is LE.ToDraw graphic)
             {
+                ShowMessage("\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/", false);
                 switch (graphic.figure)
                 {
                     case "PointNode":
@@ -87,7 +92,7 @@ public partial class MainForm : Form
                         Draw_Ray(graphic.color, graphic.points, graphic.comment, canvas);
                         break;
                     case "ArcNode":
-                        Draw_Arc(graphic.color, graphic.points, graphic.comment, canvas);
+                        Draw_Arc(graphic.color, graphic, canvas); // Pass the entire graphic object
                         break;
                     case "CircleNode":
                         Draw_Circle(graphic.color, graphic.points[0], graphic.rad, graphic.comment, canvas);
@@ -104,10 +109,12 @@ public partial class MainForm : Form
     }
 
     // Modify your ShowErrorMessage method to use the TextBox
-    private void ShowErrorMessage(string errorMessage)
+    private void ShowMessage(string errorMessage, bool error)
     {
-        errorTextBox.AppendText(errorMessage + Environment.NewLine); // Append the new error message
-        errorTextBox.Font = new Font("Arial", 14); // Set the font size to 14
+        errorTextBox.ForeColor = error ? ColorTranslator.FromHtml("#ed8796") : ColorTranslator.FromHtml("#a2c95d");
+        errorTextBox.AppendText(errorMessage + Environment.NewLine);
+
+        errorTextBox.Font = new Font("Arial", 14);
         errorTextBox.Visible = true;
     }
 
@@ -142,28 +149,23 @@ public partial class MainForm : Form
     /// <param name="comment">The comment to be displayed.</param>
     /// <param name="canvas">The graphics canvas on which the arc will be drawn.</param>
     /// <exception cref="ArgumentException">Thrown when less than 3 points are provided.</exception>
-    private static void Draw_Arc(Brush brush, PointF[] points, string comment, Graphics canvas)
+    private static void Draw_Arc(Brush brush, LE.ToDraw toDraw, Graphics canvas)
     {
-        // Ensure that we have at least 3 points
-        if (points.Length < 3)
-        {
-            throw new ArgumentException("At least 3 points are required to draw an arc.");
-        }
         // Calculate the bounding rectangle for the arc
-        var x = Math.Min(points[0].X, Math.Min(points[1].X, points[2].X));
-        var y = Math.Min(points[0].Y, Math.Min(points[1].Y, points[2].Y));
-        var width = Math.Max(points[0].X, Math.Max(points[1].X, points[2].X)) - x;
-        var height = Math.Max(points[0].Y, Math.Max(points[1].Y, points[2].Y)) - y;
+        var x = Math.Min(toDraw.points[0].X, Math.Min(toDraw.points[1].X, toDraw.points[2].X));
+        var y = Math.Min(toDraw.points[0].Y, Math.Min(toDraw.points[1].Y, toDraw.points[2].Y));
+        var width = Math.Max(toDraw.points[0].X, Math.Max(toDraw.points[1].X, toDraw.points[2].X)) - x;
+        var height = Math.Max(toDraw.points[0].Y, Math.Max(toDraw.points[1].Y, toDraw.points[2].Y)) - y;
 
         // Calculate the start and sweep angles
-        var startAngle = Convert.ToSingle(Math.Atan2(points[0].Y - points[1].Y, points[0].X - points[1].X) * 180 / Math.PI);
-        var endAngle = Convert.ToSingle(Math.Atan2(points[0].Y - points[2].Y, points[0].X - points[2].X) * 180 / Math.PI);
+        var startAngle = Convert.ToSingle(Math.Atan2(toDraw.points[0].Y - toDraw.points[1].Y, toDraw.points[0].X - toDraw.points[1].X) * 180 / Math.PI);
+        var endAngle = Convert.ToSingle(Math.Atan2(toDraw.points[0].Y - toDraw.points[2].Y, toDraw.points[0].X - toDraw.points[2].X) * 180 / Math.PI);
 
         // Draw the arc
         canvas.DrawArc(new Pen(brush), x, y, width, height, startAngle, endAngle - startAngle);
 
         // Draw the comment
-        canvas.DrawString(comment, new Font("Arial", 12), Brushes.White, points[0].X, points[0].Y);
+        canvas.DrawString(toDraw.comment, new Font("Arial", 12), Brushes.White, toDraw.points[0].X, toDraw.points[0].Y);
     }
 
     /// <summary>

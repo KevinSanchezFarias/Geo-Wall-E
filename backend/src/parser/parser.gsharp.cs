@@ -86,8 +86,6 @@ public partial class Parser
             }
         }
     }
-
-
     private Node ParseVariableDeclaration()
     {
         _ = ConsumeToken(TokenType.LetKeyword);
@@ -134,32 +132,6 @@ public partial class Parser
 
             return new MultipleVariableDeclarationNode(declarations, body);
         }
-    }
-    private Node ParsePointExpression
-    {
-        get
-        {
-            _ = ConsumeToken(TokenType.Point);
-            var name = ConsumeToken(TokenType.Identifier);
-            Node x;
-            Node y;
-            if (CurrentToken?.Type == TokenType.LParen)
-            {
-                _ = ConsumeToken(TokenType.LParen);
-                x = ParseExpression();
-                _ = ConsumeToken(TokenType.Comma);
-                y = ParseExpression();
-                _ = ConsumeToken(TokenType.RParen);
-            }
-            else
-            {
-                x = null!;
-                y = null!;
-            }
-
-            return new PointNode(name.Value, x, y);
-        }
-
     }
     private Node ParseIfExpression
     {
@@ -294,24 +266,6 @@ public partial class Parser
 
         // Return a new SequenceNode
         return new SequenceNode(values, name);
-    }
-    public static IEnumerable<double> InfiniteSequence(double start = 1)
-    {
-        double i = start;
-        while (true)
-        {
-            yield return i++;
-        }
-    }
-    private Node ParseIntersect(string name)
-    {
-        _ = ConsumeToken(TokenType.IntersectKeyword);
-        _ = ConsumeToken(TokenType.LParen);
-        var figure1 = ParseExpression();
-        _ = ConsumeToken(TokenType.Comma);
-        var figure2 = ParseExpression();
-        _ = ConsumeToken(TokenType.RParen);
-        return new IntersectNode(name, figure1, figure2, new List<PointNode>());
     }
     public static List<FunctionDeclarationNode> FDN { get => fDN; set => fDN = value; }
     private Node ParseImport

@@ -1,8 +1,5 @@
 dev:
-	dotnet run
+	dotnet watch run
 
 build:
 	dotnet build -c Release
-
-watch:
-	dotnet watch run
