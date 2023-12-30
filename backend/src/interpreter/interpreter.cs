@@ -22,15 +22,15 @@ public class Interpreter
         foreach (var line in lines)
         {
             object lineResult;
-            try
-            {
-                var lexer = new Lexer(line);
-                var parser = new Parser(lexer.LexTokens);
-                var evaluator = new Evaluator(parser.Parse());
-                lineResult = evaluator.Evaluate();
-                lineX++;
-            }
-            catch (Exception ex) { lineResult = $"Line:{lineX} {ex.Message}"; }
+            //try
+            //{
+            var lexer = new Lexer(line);
+            var parser = new Parser(lexer.LexTokens);
+            var evaluator = new Evaluator(parser.Parse());
+            lineResult = evaluator.Evaluate();
+            lineX++;
+            //}
+            //catch (Exception ex) { lineResult = $"Line:{lineX} {ex.Message}"; }
             if (lineResult is LE.ToDraw draw)
             {
                 yield return draw;

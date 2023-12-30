@@ -33,8 +33,20 @@ public partial class MainForm : Form
     private void Form1_SizeChanged(object sender, EventArgs e)
     {
         AdjustDynamicCanvasSize();
+        InputBox();
+        StartButtons();
+    }
+
+    private void StartButtons()
+    {
         button2.Location = new Point(400, (int)(Height * 0.875));
         button1.Location = new Point(150, (int)(Height * 0.875));
+        button1.BringToFront();
+        button2.BringToFront();
+    }
+
+    private void InputBox()
+    {
         textBox1.Location = new Point(ClientSize.Width - (ClientSize.Width / 4), 0);
         textBox1.Width = (int)(ClientSize.Width * 0.3);
         textBox1.Height = ClientSize.Height;
@@ -42,9 +54,8 @@ public partial class MainForm : Form
         textBox1.ForeColor = ColorTranslator.FromHtml("#ffffff");
         textBox1.PlaceholderText = "Enter your instructions";
         textBox1.Font = new Font("Arial", 14);
-        button1.BringToFront();
-        button2.BringToFront();
     }
+
     /// <summary>
     /// Adjusts the size of the dynamic canvas based on the client size.
     /// </summary>

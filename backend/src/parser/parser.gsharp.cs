@@ -29,11 +29,6 @@ public partial class Parser
                 var value when LE.cDN.Any(p => p.Identifier == value) => LE.cDN.First(p => p.Identifier == value),
                 var value when LE.DeclaredConst.Any(p => p.Identifier == value) => LE.DeclaredConst.First(p => p.Identifier == value),
                 var value when LE.poiND.Any(p => p.Key == value) => new IdentifierNode(token.Value),
-                ////////            var value when LE.cirND.Any(c => c.Name == value) => LE.cirND.First(c => c.Name == value),
-                ////////            var value when LE.arcND.Any(a => a.Name == value) => LE.arcND.First(a => a.Name == value),
-                ////////            var value when LE.linND.Any(l => l.Name == value) => LE.linND.First(l => l.Name == value),
-                ////////            var value when LE.rayND.Any(r => r.Name == value) => LE.rayND.First(r => r.Name == value),
-                ////////            var value when LE.segND.Any(s => s.Name == value) => LE.segND.First(s => s.Name == value),
                 _ => null
             };
             if (existingIdentifier != null)
@@ -45,6 +40,10 @@ public partial class Parser
             if (CurrentToken?.Type == TokenType.Operator && CurrentToken?.Value == "=")
             {
                 _ = ConsumeToken(TokenType.Operator);
+                if (CurrentToken?.Type == TokenType.LBrace)
+                {
+                    return ParseSequence(token.Value);
+                }
                 Node expression = ParseExpression();
                 return new ConstDeclarationNode(token.Value, expression);
             }

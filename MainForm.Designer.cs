@@ -70,6 +70,7 @@ partial class MainForm
         textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
         textBox1.ForeColor = System.Drawing.Color.White;
 
+
         //MainForm
         this.components = new System.ComponentModel.Container();
         this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;

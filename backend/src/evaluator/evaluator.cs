@@ -42,7 +42,21 @@ public class Evaluator
         if (drawNode.decl)
         {
             // Handle the case where the circle is declared and drawn in the same statement
-            return drawNode.Figures switch
+            return FBuild((Figure)drawNode.Figures);
+        }
+        else
+        {
+            if (drawNode.Figures is GlobalConstNode gcn && gcn.Value is Figure fg)
+            {
+                return FBuild(fg);
+            }
+            IdentifierNode x = (IdentifierNode)Visit(new ValueNode(drawNode.Figures));
+            return LE.toDraws.Any(p => x.Identifier == p.name) ? LE.toDraws.First(p => x.Identifier == p.name) : null!;
+        }
+
+        object FBuild(Figure figure)
+        {
+            return figure switch
             {
                 CircleNode circleNode => CircleBuilder(circleNode),
                 LineNode lineNode => LineBuilder(lineNode),
@@ -50,17 +64,8 @@ public class Evaluator
                 RayNode rayNode => RayBuilder(rayNode),
                 ArcNode arcNode => ArcBuilder(arcNode),
                 PointNode pointNode => PointBuilder(pointNode),
-                _ => null!,
+                _ => throw new Exception($"Unexpected node type {figure.GetType()}"),
             };
-        }
-        else
-        {
-            IdentifierNode x = (IdentifierNode)Visit(new ValueNode(drawNode.Figures));
-            if (LE.toDraws.Any(p => x.Identifier == p.name))
-            {
-                return LE.toDraws.First(p => x.Identifier == p.name);
-            }
-            return null!;
         }
     }
     /// <summary>
@@ -84,8 +89,8 @@ public class Evaluator
                 return GlobalConstNodeHandler(globalConstNode);
             case PointNode pointNode:
                 return PointNodeHandler(pointNode);
-            /* case IntersectNode intersectNode:
-                return IntersectHandler(intersectNode); */
+            case IntersectNode intersectNode:
+                return IntersectHandler(intersectNode);
             case DrawNode drawNode:
                 return Draw(drawNode);
             case FunctionCallNode functionCallNode:
@@ -104,6 +109,8 @@ public class Evaluator
                 return FigureHandler(figure);
             case VariableDeclarationNode varDecl:
                 return VarHandler(varDecl);
+            case SequenceNode sequenceNode:
+                return SequenceHandler(sequenceNode);
             case MultipleVariableDeclarationNode multipleVarDecl:
                 return MultipleVarHandler(multipleVarDecl);
             default:
@@ -165,7 +172,6 @@ public class Evaluator
                 throw new Exception($"Invalid condition type {condition.GetType()}");
             }
         }
-
         object MultipleVarHandler(MultipleVariableDeclarationNode multipleVarDecl)
         {
             scopes.Push(new Dictionary<string, object>()); // Enter a new scope
@@ -181,7 +187,6 @@ public class Evaluator
 
             return result;
         }
-
         object VarHandler(VariableDeclarationNode varDecl)
         {
             scopes.Push(new Dictionary<string, object>()); // Enter a new scope
@@ -266,6 +271,22 @@ public class Evaluator
             return result;
         }
         #endregion
+    }
+
+    private object SequenceHandler(SequenceNode sequenceNode)
+    {
+        _ = new object();
+        foreach (var node in sequenceNode.Nodes)
+        {
+            object result = Visit(node);
+        }
+        LE.Seqs.Add(sequenceNode);
+        return null!;
+    }
+
+    private object IntersectHandler(IntersectNode intersectNode)
+    {
+        throw new NotImplementedException();
     }
 
     private object MeasureNodeHandler(MeasureNode measureNode)
@@ -613,6 +634,7 @@ public class Evaluator
         else if (constDeclarationNode.Value is Figure figure)
         {
             variables[constDeclarationNode.Identifier] = figure;
+            LE.DeclaredConst.Add(new GlobalConstNode(constDeclarationNode.Identifier, figure));
             return null!;
         }
         else
