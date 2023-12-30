@@ -4,10 +4,44 @@ namespace Lists
 {
     public static class LE
     {
+        #region Draw
+        /// <summary>
+        /// Represents a structure that holds information about a figure to be drawn.
+        /// </summary>
+        public struct ToDraw
+        {
+            public string name;
+            /// <summary>
+            /// The name of the figure.
+            /// </summary>
+            public string figure;
+
+            /// <summary>
+            /// The color of the figure.
+            /// </summary>
+            public Brush color;
+
+            /// <summary>
+            /// The array of points that define the figure.
+            /// </summary>
+            public PointF[] points;
+
+            /// <summary>
+            /// The radius of the figure (if applicable).
+            /// </summary>
+            public double rad;
+
+            /// <summary>
+            /// A comment associated with the figure.
+            /// </summary>
+            public string comment;
+        }
+        #endregion
         private static Stack<Brush> color = new(new[] { Brushes.White });
-        public static readonly List<PointNode> poiND = new();
+        public static readonly List<ToDraw> toDraws = new();
+        public static readonly Dictionary<string, PointF> poiND = new();
         public static readonly List<ArcNode> arcND = new();
-        public static readonly List<CircleNode> cirND = new();
+        public static readonly Dictionary<string, CircleNode> cirND = new();
         public static readonly List<LineNode> linND = new();
         public static readonly List<SegmentNode> segND = new();
         public static readonly List<RayNode> rayND = new();

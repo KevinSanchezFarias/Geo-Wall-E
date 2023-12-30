@@ -28,12 +28,12 @@ public partial class Parser
                 var value when LE.Seqs.Any(s => s.Identifier == value) => LE.Seqs.First(s => s.Identifier == value),
                 var value when LE.cDN.Any(p => p.Identifier == value) => LE.cDN.First(p => p.Identifier == value),
                 var value when LE.DeclaredConst.Any(p => p.Identifier == value) => LE.DeclaredConst.First(p => p.Identifier == value),
-                var value when LE.poiND.Any(p => p.Name == value) => LE.poiND.First(p => p.Name == value),
-                var value when LE.cirND.Any(c => c.Name == value) => LE.cirND.First(c => c.Name == value),
-                var value when LE.arcND.Any(a => a.Name == value) => LE.arcND.First(a => a.Name == value),
-                var value when LE.linND.Any(l => l.Name == value) => LE.linND.First(l => l.Name == value),
-                var value when LE.rayND.Any(r => r.Name == value) => LE.rayND.First(r => r.Name == value),
-                var value when LE.segND.Any(s => s.Name == value) => LE.segND.First(s => s.Name == value),
+                var value when LE.poiND.Any(p => p.Key == value) => new IdentifierNode(token.Value),
+                ////////            var value when LE.cirND.Any(c => c.Name == value) => LE.cirND.First(c => c.Name == value),
+                ////////            var value when LE.arcND.Any(a => a.Name == value) => LE.arcND.First(a => a.Name == value),
+                ////////            var value when LE.linND.Any(l => l.Name == value) => LE.linND.First(l => l.Name == value),
+                ////////            var value when LE.rayND.Any(r => r.Name == value) => LE.rayND.First(r => r.Name == value),
+                ////////            var value when LE.segND.Any(s => s.Name == value) => LE.segND.First(s => s.Name == value),
                 _ => null
             };
             if (existingIdentifier != null)
@@ -141,11 +141,23 @@ public partial class Parser
         {
             _ = ConsumeToken(TokenType.Point);
             var name = ConsumeToken(TokenType.Identifier);
-            var x = new Random().Next(150, 250);
-            var y = new Random().Next(150, 250);
-            LE.poiND.Add(new PointNode(name.Value, x, y));
+            Node x;
+            Node y;
+            if (CurrentToken?.Type == TokenType.LParen)
+            {
+                _ = ConsumeToken(TokenType.LParen);
+                x = ParseExpression();
+                _ = ConsumeToken(TokenType.Comma);
+                y = ParseExpression();
+                _ = ConsumeToken(TokenType.RParen);
+            }
+            else
+            {
+                x = null!;
+                y = null!;
+            }
 
-            return new EndNode();
+            return new PointNode(name.Value, x, y);
         }
 
     }

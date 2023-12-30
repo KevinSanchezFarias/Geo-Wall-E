@@ -1,4 +1,5 @@
 
+
 namespace Nodes;
 
 /// <summary>
@@ -29,6 +30,19 @@ public class ValueNode : Node
     public ValueNode(object value)
     {
         Value = value;
+    }
+
+    public static implicit operator string?(ValueNode? v)
+    {
+        throw new NotImplementedException();
+    }
+}
+public class Figure : Node
+{
+    public string name;
+    public Figure(string nameX)
+    {
+        name = nameX;
     }
 }
 public class MultiAssignmentNode : Node

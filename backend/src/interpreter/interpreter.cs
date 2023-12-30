@@ -15,7 +15,7 @@ public class Interpreter
     public static IEnumerable<object> Interpret(string input)
     {
         short lineX = 1;
-        List<ToDraw> toDraws = new();
+        List<LE.ToDraw> toDraws = new();
         // Split the string into lines
         var lines = input.Split(new[] { ";\r" }, StringSplitOptions.RemoveEmptyEntries);
         CleanFigs();
@@ -31,11 +31,11 @@ public class Interpreter
                 lineX++;
             }
             catch (Exception ex) { lineResult = $"Line:{lineX} {ex.Message}"; }
-            if (lineResult is ToDraw draw)
+            if (lineResult is LE.ToDraw draw)
             {
                 yield return draw;
             }
-            else if (lineResult is List<ToDraw> drawList)
+            else if (lineResult is List<LE.ToDraw> drawList)
             {
                 toDraws.AddRange(drawList);
                 yield return toDraws;
@@ -51,5 +51,5 @@ public class Interpreter
         }
     }
     /*Minified*/
-    private static void CleanFigs() { LE.DeclaredConst.Clear(); LE.arcND.Clear(); LE.cirND.Clear(); LE.linND.Clear(); LE.poiND.Clear(); LE.rayND.Clear(); LE.segND.Clear(); LE.Seqs.Clear(); LE.Color.Clear(); LE.Color.Push(Brushes.White); }
+    private static void CleanFigs() { LE.toDraws.Clear(); LE.DeclaredConst.Clear(); LE.arcND.Clear(); LE.cirND.Clear(); LE.linND.Clear(); LE.poiND.Clear(); LE.rayND.Clear(); LE.segND.Clear(); LE.Seqs.Clear(); LE.Color.Clear(); LE.Color.Push(Brushes.White); }
 }

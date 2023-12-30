@@ -1,13 +1,13 @@
 namespace Nodes;
 
-public class RayNode : Node
+public class RayNode : Figure
 {
     public string Name { get; }
-    public PointNode P1 { get; }
-    public PointNode P2 { get; }
+    public Node P1 { get; }
+    public Node P2 { get; }
     public Node Comment { get; }
 
-    public RayNode(string name, PointNode p1, PointNode p2, Node comment)
+    public RayNode(string name, Node p1, Node p2, Node comment) : base(name)
     {
         Name = name;
         P1 = p1;

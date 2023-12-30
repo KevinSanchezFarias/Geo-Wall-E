@@ -3,10 +3,10 @@ namespace Nodes;
 public class PointNode : Node
 {
     public string Name { get; }
-    public double X { get; }
-    public double Y { get; }
+    public Node X { get; }
+    public Node Y { get; }
 
-    public PointNode(string name, double x, double y)
+    public PointNode(string name, Node x, Node y)
     {
         Name = name;
         X = x;

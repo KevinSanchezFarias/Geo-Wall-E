@@ -1,15 +1,14 @@
 namespace Nodes;
 
-public class CircleNode : Node
+public class CircleNode : Figure
 {
-    public string Name { get; }
-    public PointNode Center { get; }
+    public Node Center { get; }
     public Node Radius { get; }
     public Node Comment { get; }
 
-    public CircleNode(string name, PointNode cen, Node rad, Node comment)
+    public CircleNode(string nameX, Node cen, Node rad, Node comment) : base(nameX)
     {
-        Name = name;
+        name = nameX;
         Center = cen;
         Radius = rad;
         Comment = comment;

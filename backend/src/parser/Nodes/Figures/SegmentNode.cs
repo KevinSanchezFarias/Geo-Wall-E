@@ -1,13 +1,13 @@
 namespace Nodes;
 
-public class SegmentNode : Node
+public class SegmentNode : Figure
 {
     public string Name { get; }
-    public PointNode A { get; }
-    public PointNode B { get; }
+    public Node A { get; }
+    public Node B { get; }
     public Node Comment { get; }
 
-    public SegmentNode(string name, PointNode A, PointNode B, Node Comment)
+    public SegmentNode(string name, Node A, Node B, Node Comment) : base(name)
     {
         Name = name;
         this.A = A;

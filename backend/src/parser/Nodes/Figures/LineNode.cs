@@ -1,13 +1,13 @@
 namespace Nodes;
 
-public class LineNode : Node
+public class LineNode : Figure
 {
     public string Name { get; }
-    public PointNode A { get; }
-    public PointNode B { get; }
+    public Node A { get; }
+    public Node B { get; }
     public Node Comment { get; }
 
-    public LineNode(string name, PointNode A, PointNode B, Node Comment)
+    public LineNode(string name, Node A, Node B, Node Comment) : base(name)
     {
         Name = name;
         this.A = A;

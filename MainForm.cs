@@ -1,4 +1,5 @@
 using EvaluatorAnalize;
+using Lists;
 using WaLI.backend;
 namespace FormsTest1;
 
@@ -69,7 +70,7 @@ public partial class MainForm : Form
             {
                 ShowErrorMessage(errorMessage);
             }
-            else if (graphics is ToDraw graphic)
+            else if (graphics is LE.ToDraw graphic)
             {
                 switch (graphic.figure)
                 {
