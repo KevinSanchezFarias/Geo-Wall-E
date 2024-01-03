@@ -290,7 +290,11 @@ public class Evaluator
     private object IntersectHandler(IntersectNode intersectNode)
     {
         throw new NotImplementedException();
+        var figure1 = (Figure)Visit(intersectNode.Figure1);
+        var figure2 = (Figure)Visit(intersectNode.Figure2);
+        return null!;
     }
+
     private object MeasureNodeHandler(MeasureNode measureNode)
     {
         // Evaluate the nodes and cast them to PointF

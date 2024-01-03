@@ -35,19 +35,15 @@ public partial class Parser
             {
                 return existingIdentifier!;
             }
-
             // If the identifier doesn't exist, try to declare it
-            if (CurrentToken?.Type == TokenType.Operator && CurrentToken?.Value == "=")
+            return CurrentToken?.Type switch
             {
-                _ = ConsumeToken(TokenType.Operator);
-                if (CurrentToken?.Type == TokenType.LBrace)
-                {
-                    return ParseSequence(token.Value);
-                }
-                Node expression = ParseExpression();
-                return new ConstDeclarationNode(token.Value, expression);
-            }
-            else if (CurrentToken?.Type == TokenType.Comma)
+                TokenType.Operator when CurrentToken?.Value == "=" => ParseDeclareSimpleVar(token),
+                TokenType.Comma => MultiAssignParse(token),
+                TokenType.LParen => FunctionCallParse(token),
+                _ => new IdentifierNode(token.Value)
+            };
+            Node MultiAssignParse(Token token)
             {
                 // Parse multiple assignments
                 var identifiers = new List<string> { token.Value };
@@ -60,7 +56,7 @@ public partial class Parser
                 Node sequence = ParseExpression();
                 return new MultiAssignmentNode(identifiers, sequence);
             }
-            else if (CurrentToken?.Type == TokenType.LParen)
+            Node FunctionCallParse(Token token)
             {
                 // Parse a function call
                 var args = new List<Node>();
@@ -78,10 +74,15 @@ public partial class Parser
                         ? (Node)new FunctionCallNode(token.Value, args)
                         : throw new Exception($"Undefined function {token.Value}");
             }
-            else
+            Node ParseDeclareSimpleVar(Token token)
             {
-                // If the identifier doesn't exist and it's not being declared, create a new IdentifierNode
-                return new IdentifierNode(token.Value);
+                _ = ConsumeToken(TokenType.Operator);
+                if (CurrentToken?.Type == TokenType.LBrace)
+                {
+                    return ParseSequence(token.Value);
+                }
+                Node expression = ParseExpression();
+                return new ConstDeclarationNode(token.Value, expression);
             }
         }
     }

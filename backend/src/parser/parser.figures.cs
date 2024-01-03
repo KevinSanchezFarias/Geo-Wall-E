@@ -254,15 +254,18 @@ public partial class Parser
 
         }
     }
-    private Node ParseIntersect(string name)
+    private Node ParseIntersect
     {
-        _ = ConsumeToken(TokenType.IntersectKeyword);
-        _ = ConsumeToken(TokenType.LParen);
-        var figure1 = ParseExpression();
-        _ = ConsumeToken(TokenType.Comma);
-        var figure2 = ParseExpression();
-        _ = ConsumeToken(TokenType.RParen);
-        return new IntersectNode(name, figure1, figure2, new List<PointNode>());
+        get
+        {
+            _ = ConsumeToken(TokenType.IntersectKeyword);
+            _ = ConsumeToken(TokenType.LParen);
+            var figure1 = ParseExpression();
+            _ = ConsumeToken(TokenType.Comma);
+            var figure2 = ParseExpression();
+            _ = ConsumeToken(TokenType.RParen);
+            return new IntersectNode(figure1, figure2);
+        }
     }
     #endregion
 }

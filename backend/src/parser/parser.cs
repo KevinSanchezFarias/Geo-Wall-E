@@ -116,6 +116,7 @@ public partial class Parser
                 TokenType.StringLiteral => ParseStringLiteral,
                 TokenType.Identifier => ParseIdentifier,
                 TokenType.ImportKeyword => ParseImport,
+                TokenType.IntersectKeyword => ParseIntersect,
                 _ => throw new Exception($"Unexpected token {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}"),
             };
         }
