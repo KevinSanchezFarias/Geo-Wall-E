@@ -31,11 +31,6 @@ public class ValueNode : Node
     {
         Value = value;
     }
-
-    public static implicit operator string?(ValueNode? v)
-    {
-        throw new NotImplementedException();
-    }
 }
 public class Figure : Node
 {
@@ -48,9 +43,9 @@ public class Figure : Node
 public class MultiAssignmentNode : Node
 {
     public List<string> Identifiers { get; }
-    public SequenceNode Sequence { get; }
+    public Node Sequence { get; }
 
-    public MultiAssignmentNode(List<string> identifiers, SequenceNode sequence)
+    public MultiAssignmentNode(List<string> identifiers, Node sequence)
     {
         Identifiers = identifiers;
         Sequence = sequence;
@@ -76,7 +71,7 @@ public class GlobalConstNode : Node
     public string Identifier { get; }
     public object Value { get; }
 
-    public GlobalConstNode(string identifier, Node value)
+    public GlobalConstNode(string identifier, object value)
     {
         Identifier = identifier;
         Value = value;

@@ -40,7 +40,7 @@ namespace Lists
         private static Stack<Brush> color = new(new[] { Brushes.White });
         public static readonly List<ToDraw> toDraws = new();
         public static readonly Dictionary<string, PointF> poiND = new();
-        public static readonly List<SequenceNode> Seqs = new();
+        public static readonly List<DeclaredSequenceNode> Seqs = new();
         public static readonly Dictionary<string, Func<double[], double>> predefinedFunctions = new()
     {
         { "Sin", args => Math.Sin(args[0]) },

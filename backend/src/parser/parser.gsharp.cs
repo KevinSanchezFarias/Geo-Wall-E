@@ -57,7 +57,7 @@ public partial class Parser
                     identifiers.Add(ConsumeToken(TokenType.Identifier).Value);
                 }
                 _ = ConsumeToken(TokenType.Operator);
-                SequenceNode sequence = (SequenceNode)ParseSequence(token.Value);
+                Node sequence = ParseExpression();
                 return new MultiAssignmentNode(identifiers, sequence);
             }
             else if (CurrentToken?.Type == TokenType.LParen)

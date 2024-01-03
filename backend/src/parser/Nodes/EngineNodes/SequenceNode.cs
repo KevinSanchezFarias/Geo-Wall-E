@@ -11,3 +11,14 @@ public class SequenceNode : Node
         Identifier = identifier;
     }
 }
+public class DeclaredSequenceNode : Node
+{
+    public string Identifier { get; }
+    public List<object> Nodes { get; }
+
+    public DeclaredSequenceNode(List<object> nodes, string identifier)
+    {
+        Nodes = nodes;
+        Identifier = identifier;
+    }
+}

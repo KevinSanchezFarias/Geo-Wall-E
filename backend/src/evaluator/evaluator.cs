@@ -39,6 +39,7 @@ public class Evaluator
     /// <returns>A list of <see cref="ToDraw"/> objects representing the figures to be drawn.</returns>
     public object Draw(DrawNode drawNode)
     {
+        var xT = Visit(drawNode.Figures);
         if (drawNode.decl)
         {
             // Handle the case where the circle is declared and drawn in the same statement
@@ -111,6 +112,8 @@ public class Evaluator
                 return VarHandler(varDecl);
             case SequenceNode sequenceNode:
                 return SequenceHandler(sequenceNode);
+            case DeclaredSequenceNode declaredSequenceNode:
+                return declaredSequenceNode;
             case MultipleVariableDeclarationNode multipleVarDecl:
                 return MultipleVarHandler(multipleVarDecl);
             default:
@@ -272,23 +275,22 @@ public class Evaluator
         }
         #endregion
     }
-
     private object SequenceHandler(SequenceNode sequenceNode)
     {
-        _ = new object();
+        List<object> evaluatedNodes = new();
         foreach (var node in sequenceNode.Nodes)
         {
             object result = Visit(node);
+            evaluatedNodes.Add(result);
         }
-        LE.Seqs.Add(sequenceNode);
+        DeclaredSequenceNode declaredSequenceNode = new(evaluatedNodes, sequenceNode.Identifier);
+        LE.Seqs.Add(declaredSequenceNode);
         return null!;
     }
-
     private object IntersectHandler(IntersectNode intersectNode)
     {
         throw new NotImplementedException();
     }
-
     private object MeasureNodeHandler(MeasureNode measureNode)
     {
         // Evaluate the nodes and cast them to PointF
@@ -302,7 +304,6 @@ public class Evaluator
 
         return distance;
     }
-
     /// <summary>
     /// Handles the given figure and returns the result.
     /// </summary>
@@ -550,8 +551,9 @@ public class Evaluator
             figure = "CircleNode",
             points = new PointF[] { (PointF)Visit(node: circleNode.Center) },
             rad = (double)Visit(node: circleNode.Radius),
-            comment = null!,
+            comment = null!
         };
+
         return toDraw;
     }
     /// <summary>
@@ -584,38 +586,42 @@ public class Evaluator
     }
     private object MultiAssignmentHandler(MultiAssignmentNode multiAssignmentNode)
     {
-        var identifiers = multiAssignmentNode.Identifiers;
-        var sequence = multiAssignmentNode.Sequence;
-
         // Evaluate the sequence
-        var values = sequence.Nodes.Select(Visit).ToList();
+        var evaluatedSequence = Visit(multiAssignmentNode.Sequence);
+        List<object> sequence;
 
-        // Assign each value to its corresponding identifier, or UndefinedNode.Value if there is no corresponding value
-        for (int i = 0; i < identifiers.Count - 1; i++)
+        if (evaluatedSequence is DeclaredSequenceNode declaredSequence)
         {
-            var identifier = identifiers[i];
-            var value = i < values.Count ? values[i] : UndefinedNode.Value;
-
-            // Create a new ConstDeclarationNode and add it to cDN
-            var constDeclarationNode = new ConstDeclarationNode(identifier, new ValueNode(value));
-            LE.cDN.Add(constDeclarationNode);
+            sequence = declaredSequence.Nodes;
         }
-
-        // If there are as many or more values than identifiers, create a new SequenceNode for the last identifier
-        if (values.Count >= identifiers.Count)
+        else if (evaluatedSequence is List<object> list)
         {
-            var lastIdentifier = identifiers.Last();
-            var remainingValues = values.Skip(identifiers.Count - 1).Select(value => new ValueNode(value)).ToList<Node>();
-            var sequenceNode = new SequenceNode(remainingValues, lastIdentifier);
-            LE.Seqs.Add(sequenceNode);
+            sequence = list;
         }
-        // Otherwise, create a new ConstDeclarationNode for the last identifier and add it to cDN
         else
         {
-            var lastIdentifier = identifiers.Last();
-            var value = UndefinedNode.Value;
-            var constDeclarationNode = new ConstDeclarationNode(lastIdentifier, new ValueNode(value));
-            LE.cDN.Add(constDeclarationNode);
+            throw new Exception("The right-hand side of a multi-assignment must be a sequence.");
+        }
+
+        // Assign values to identifiers
+        for (int i = 0; i < multiAssignmentNode.Identifiers.Count; i++)
+        {
+            var identifier = multiAssignmentNode.Identifiers[i];
+
+            if (i < sequence.Count)
+            {
+                // If there is a corresponding value in the sequence, assign it to the identifier
+                var value = sequence[i];
+                LE.DeclaredConst.Add(new GlobalConstNode(identifier: identifier, value: new ValueNode(value)));
+            }
+        }
+
+        // If there are more values than identifiers, assign the remaining values to a new DeclaredSequenceNode
+        if (sequence.Count > multiAssignmentNode.Identifiers.Count)
+        {
+            var lastIdentifier = multiAssignmentNode.Identifiers.Last();
+            var remainingValues = sequence.Skip(multiAssignmentNode.Identifiers.Count - 1).ToList();
+            LE.Seqs.Add(new DeclaredSequenceNode(remainingValues, lastIdentifier));
         }
 
         return null!;
