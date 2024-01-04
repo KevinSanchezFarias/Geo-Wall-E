@@ -5,7 +5,13 @@ namespace Nodes;
 /// </summary>
 public class IntersectNode : Node
 {
+    /// <summary>
+    /// Gets the first figure node.
+    /// </summary>
     public Node Figure1 { get; }
+    /// <summary>
+    /// Gets the second figure node.
+    /// </summary>
     public Node Figure2 { get; }
 
     /// <summary>

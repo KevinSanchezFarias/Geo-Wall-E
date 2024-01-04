@@ -1,5 +1,8 @@
 namespace Nodes;
 
+/// <summary>
+/// Represents a sequence of nodes.
+/// </summary>
 public class SequenceNode : Node
 {
     public string Identifier { get; }
@@ -11,6 +14,10 @@ public class SequenceNode : Node
         Identifier = identifier;
     }
 }
+
+/// <summary>
+/// Represents a declared sequence of nodes.
+/// </summary>
 public class DeclaredSequenceNode : Node
 {
     public string Identifier { get; }

@@ -258,6 +258,7 @@ public partial class Parser
     {
         get
         {
+            //intersect(seg(p1, p2), seg(p3, p4));
             _ = ConsumeToken(TokenType.IntersectKeyword);
             _ = ConsumeToken(TokenType.LParen);
             var figure1 = ParseExpression();

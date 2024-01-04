@@ -2,7 +2,7 @@ using LexerAnalize;
 using ParserAnalize;
 using EvaluatorAnalize;
 using Lists;
-using System.Drawing.Text;
+using WaLI.backend.src.semantic;
 
 namespace InterpreterAnalizer;
 public class Interpreter
@@ -26,8 +26,14 @@ public class Interpreter
             //{
             var lexer = new Lexer(line);
             var parser = new Parser(lexer.LexTokens);
-            var evaluator = new Evaluator(parser.Parse());
+            var ast = parser.Parse();
+
+            var semanticAnalyzer = new SemanticAnalyzer();
+            semanticAnalyzer.Analyze(ast);
+
+            var evaluator = new Evaluator(ast);
             lineResult = evaluator.Evaluate();
+
             lineX++;
             //}
             //catch (Exception ex) { lineResult = $"Line:{lineX} {ex.Message}"; }
