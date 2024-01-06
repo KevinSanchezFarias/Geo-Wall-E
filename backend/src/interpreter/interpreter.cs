@@ -28,8 +28,8 @@ public class Interpreter
             var parser = new Parser(lexer.LexTokens);
             var ast = parser.Parse();
 
-            var semanticAnalyzer = new SemanticAnalyzer();
-            semanticAnalyzer.Analyze(ast);
+            /*             var semanticAnalyzer = new SemanticAnalyzer();
+                        semanticAnalyzer.Analyze(ast); */
 
             var evaluator = new Evaluator(ast);
             lineResult = evaluator.Evaluate();

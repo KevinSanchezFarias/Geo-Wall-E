@@ -18,10 +18,7 @@ public class Evaluator
     /// Initializes a new instance of the Evaluator class.
     /// </summary>
     /// <param name="ast">The abstract syntax tree representing the program.</param>
-    public Evaluator(Node ast)
-    {
-        AST = ast;
-    }
+    public Evaluator(Node ast) => AST = ast;
     private Dictionary<string, object> variables = new();
     private readonly Stack<Dictionary<string, object>> scopes = new();
     /// <summary>
@@ -30,7 +27,21 @@ public class Evaluator
     /// <returns>The result of the evaluation.</returns>
     public object Evaluate()
     {
-        return Visit(AST);
+        var visited = Visit(AST);
+        switch (visited)
+        {
+            case GlobalConstNode gcn:
+                LE.DeclaredConst.Add(gcn);
+                return null!;
+            case DeclaredSequenceNode dsn:
+                LE.Seqs.Add(dsn);
+                return null!;
+            case Figure figure:
+                FigureHandler(figure);
+                return null!;
+            default:
+                return visited;
+        }
     }
     /// <summary>
     /// Draws the specified <see cref="DrawNode"/> and returns a list of <see cref="ToDraw"/> objects.
@@ -83,7 +94,6 @@ public class Evaluator
             MultiAssignmentNode multiAssignmentNode => MultiAssignmentHandler(multiAssignmentNode),
             ConstDeclarationNode constDeclarationNode => ConstDeclarationNodeHandler(constDeclarationNode),
             GlobalConstNode globalConstNode => GlobalConstNodeHandler(globalConstNode),
-            PointNode pointNode => PointNodeHandler(pointNode),
             IntersectNode intersectNode => IntersectHandler(intersectNode),
             DrawNode drawNode => Draw(drawNode),
             FunctionCallNode functionCallNode => InvokeDeclaredFunctionsHandler(functionCallNode),
@@ -92,7 +102,7 @@ public class Evaluator
             BinaryExpressionNode binaryExpressionNode => BinaryHandler(binaryExpressionNode),
             IfExpressionNode ifExpressionNode => ConditionalHandler(ifExpressionNode),
             IdentifierNode identifierNode => IdentifierHandler(identifierNode),
-            Figure figure => FigureHandler(figure),
+            Figure figure => figure,
             VariableDeclarationNode varDecl => VarHandler(varDecl),
             SequenceNode sequenceNode => SequenceHandler(sequenceNode),
             DeclaredSequenceNode declaredSequenceNode => declaredSequenceNode,
@@ -253,193 +263,6 @@ public class Evaluator
 
             return result;
         }
-        object FigureHandler(Figure figure)
-        {
-            return figure switch
-            {
-                CircleNode circleNode => CircleNHandler(circleNode),
-                LineNode lineNode => LineNHandler(lineNode),
-                SegmentNode segmentNode => SegmentNHandler(segmentNode),
-                RayNode rayNode => RayNHandler(rayNode),
-                ArcNode arcNode => ArcNHandler(arcNode),
-                _ => throw new Exception($"Unexpected node type {figure.GetType()}"),
-            };
-        }
-        object ArcNHandler(ArcNode arcNode)
-        {
-            if (arcNode.Center is null && arcNode.P1 is null && arcNode.P2 is null && arcNode.Measure is null)
-            {
-                LE.ToDraw toDraw = new()
-                {
-                    name = arcNode.Name,
-                    color = LE.Color.First(),
-                    figure = "ArcNode",
-                    points = new PointF[]
-                    {
-                    new(new Random().Next(150, 300), new Random().Next(150, 300)),
-                    new(new Random().Next(150, 300), new Random().Next(150, 300)),
-                    new(new Random().Next(150, 300), new Random().Next(150, 300))
-                    },
-                    rad = new Random().Next(0, 500),
-                    comment = null!
-                };
-                LE.toDraws.Add(toDraw);
-                return null!;
-            }
-            else
-            {
-                ArcBuilder(arcNode);
-                return null!;
-            }
-        }
-        object RayNHandler(RayNode rayNode)
-        {
-            if (rayNode.P1 is null && rayNode.P2 is null)
-            {
-                LE.ToDraw toDraw = new()
-                {
-                    name = rayNode.Name,
-                    color = LE.Color.First(),
-                    figure = "RayNode",
-                    points = new PointF[]
-                    {
-                    new(new Random().Next(150, 300), new Random().Next(150, 300)),
-                    new(new Random().Next(150, 300), new Random().Next(150, 300))
-                    },
-                    comment = null!
-                };
-                LE.toDraws.Add(toDraw);
-                return null!;
-            }
-            else
-            {
-                LE.toDraws.Add(RayBuilder(rayNode));
-                return null!;
-            }
-        }
-        object SegmentNHandler(SegmentNode segmentNode)
-        {
-            if (segmentNode.A is null && segmentNode.B is null)
-            {
-                LE.ToDraw toDraw = new()
-                {
-                    name = segmentNode.Name,
-                    color = LE.Color.First(),
-                    figure = "SegmentNode",
-                    points = new PointF[]
-                    {
-                    new(new Random().Next(150, 300), new Random().Next(150, 300)),
-                    new(new Random().Next(150, 300), new Random().Next(150, 300))
-                    },
-                    comment = null!
-                };
-                LE.toDraws.Add(toDraw);
-                return null!;
-            }
-            else
-            {
-                LE.toDraws.Add(SegBuilder(segmentNode));
-                return null!;
-            }
-        }
-        object LineNHandler(LineNode lineNode)
-        {
-            if (lineNode.A is null && lineNode.B is null)
-            {
-                LE.ToDraw toDraw = new()
-                {
-                    name = lineNode.Name,
-                    color = LE.Color.First(),
-                    figure = "LineNode",
-                    points = new PointF[]
-                    {
-                    new(new Random().Next(150, 300), new Random().Next(150, 300)),
-                    new(new Random().Next(150, 300), new Random().Next(150, 300))
-                    },
-                    comment = null!
-                };
-                LE.toDraws.Add(toDraw);
-                return null!;
-            }
-            else
-            {
-                LE.toDraws.Add(LineBuilder(lineNode));
-                return null!;
-            }
-        }
-        object CircleNHandler(CircleNode circleNode)
-        {
-            if (circleNode.Center is null && circleNode.Radius is null)
-            {
-                LE.ToDraw toDraw = new()
-                {
-                    name = circleNode.name,
-                    color = LE.Color.First(),
-                    figure = "CircleNode",
-                    points = new PointF[] { new(x: new Random().Next(150, 300), y: new Random().Next(150, 300)) },
-                    rad = new Random().Next(0, 500),
-                    comment = null!
-                };
-                LE.toDraws.Add(toDraw);
-                return null!;
-            }
-            else
-            {
-                LE.toDraws.Add(CircleBuilder(circleNode));
-                return null!;
-            }
-        }
-        object PointNodeHandler(PointNode pointNode)
-        {
-            if (pointNode.X is null || pointNode.Y is null)
-            {
-                LE.poiND.Add(pointNode.Name, new PointF(new Random().Next(150, 300), new Random().Next(150, 300)));
-                return null!;
-            }
-            else
-            {
-                var point = PointBuilder(pointNode);
-                LE.poiND.Add(pointNode.Name, point.Item2); // Add the PointF to the dictionary
-                return null!;
-            }
-        }
-        object SequenceHandler(SequenceNode sequenceNode)
-        {
-            List<object> evaluatedNodes = new();
-            foreach (var node in sequenceNode.Nodes)
-            {
-                object result = Visit(node);
-                evaluatedNodes.Add(result);
-            }
-            DeclaredSequenceNode declaredSequenceNode = new(evaluatedNodes, sequenceNode.Identifier);
-            LE.Seqs.Add(declaredSequenceNode);
-            return null!;
-        }
-        object IntersectHandler(IntersectNode intersectNode)
-        {
-            var figure1 = intersectNode.Figure1;
-            var figure2 = intersectNode.Figure2;
-
-            // TODO: Implement your intersection logic here.
-            // This could be a method that takes two figures and returns their intersection.
-            var intersection = CalculateIntersection(figure1, figure2);
-
-            if (intersection.Count > 1)
-            {
-                // If there are more than one intersection points, return a DeclaredSequence.
-                return Visit(new DeclaredSequenceNode(intersection, ""));
-            }
-            else if (intersection.Count == 1)
-            {
-                // If there is only one intersection point, return a GlobalConstNode.
-                return new GlobalConstNode("", intersection.First());
-            }
-            else
-            {
-                // If there are no intersection points, throw an error.
-                throw new Exception("No intersection points found.");
-            }
-        }
         object MeasureNodeHandler(MeasureNode measureNode)
         {
             // Evaluate the nodes and cast them to PointF
@@ -455,8 +278,13 @@ public class Evaluator
         }
         object GlobalConstNodeHandler(GlobalConstNode globalConstNode)
         {
+            if (globalConstNode.Value is PointNode pointNode)
+            {
+                return new PointF(Convert.ToSingle(Visit(node: pointNode.X)), Convert.ToSingle(Visit(node: pointNode.Y)));
+            }
             var matchingNode = LE.DeclaredConst.FirstOrDefault(node => node.Identifier == globalConstNode.Identifier);
-            return Visit((Node)matchingNode!.Value);
+            var x = matchingNode!.Value;
+            return x;
         }
         object MultiAssignmentHandler(MultiAssignmentNode multiAssignmentNode)
         {
@@ -486,7 +314,7 @@ public class Evaluator
                 {
                     // If there is a corresponding value in the sequence, assign it to the identifier
                     var value = sequence[i];
-                    LE.DeclaredConst.Add(new GlobalConstNode(identifier: identifier, value: new ValueNode(value)));
+                    LE.DeclaredConst.Add(new GlobalConstNode(identifier: identifier, value: Visit((Node)value)));
                 }
             }
 
@@ -502,84 +330,261 @@ public class Evaluator
         }
         object ConstDeclarationNodeHandler(ConstDeclarationNode constDeclarationNode)
         {
-            if (constDeclarationNode.Value is ValueNode valueNode)
+            if (constDeclarationNode.Value is Figure figure)
             {
-                variables[constDeclarationNode.Identifier] = valueNode.Value;
+                return new GlobalConstNode(constDeclarationNode.Identifier, figure);
             }
-            else if (constDeclarationNode.Value is Figure figure)
+            else if (constDeclarationNode.Value is IntersectNode intersectNode)
             {
-                variables[constDeclarationNode.Identifier] = figure;
-                LE.DeclaredConst.Add(new GlobalConstNode(constDeclarationNode.Identifier, figure));
-                return null!;
+                var x = Visit(intersectNode);
+                if (x is List<PointNode> points)
+                {
+                    if (points.Count > 1)
+                    {
+                        return new DeclaredSequenceNode(points.Cast<object>().ToList(), constDeclarationNode.Identifier);
+                    }
+                    else if (points.Count == 1)
+                    {
+                        // Create a normal GlobalConstNode with the PointNode
+                        return new GlobalConstNode(constDeclarationNode.Identifier, points[0]);
+                    }
+                    else
+                    {
+                        throw new Exception("The intersection of two figures must be a point or a sequence of points.");
+                    }
+                }
             }
             else
             {
-                variables[constDeclarationNode.Identifier] = Visit(constDeclarationNode.Value);
+                return new GlobalConstNode(constDeclarationNode.Identifier, Visit(constDeclarationNode.Value));
             }
-            LE.DeclaredConst.Add(new GlobalConstNode(
-                constDeclarationNode.Identifier,
-                new ValueNode(Visit(constDeclarationNode.Value))));
             return null!;
         }
         #endregion
     }
 
-    private static List<object> CalculateIntersection(Node figure1, Node figure2)
+    private object PointNodeHandler(PointNode pointNode)
     {
-        // Create a list to store the intersection points
-        List<object> intersections = new();
-
-        if (figure1 is CircleNode circleNode1 && figure2 is CircleNode circleNode1_2)
+        if (pointNode.X is null || pointNode.Y is null)
         {
-
-            // Calculate the distance between the centers of the circles
-            var dx = circleNode1.Center.X - circleNode1_2.Center.X;
-            var dy = circleNode1.Center.Y - circleNode1_2.Center.Y;
-            var distance = Math.Sqrt(dx * dx + dy * dy);
-
-            // Check if the circles are the same
-            if (distance == 0 && circleNode1.Radius == circleNode1_2.Radius)
-            {
-                // If the circles are the same, return the first circle
-                intersections.Add(circleNode1);
-            }
-            else
-            {
-                // Calculate the distance from the first circle to the intersection point
-                var a = (circleNode1.Radius * circleNode1.Radius - circleNode1_2.Radius * circleNode1_2.Radius + distance * distance) / (2 * distance);
-
-                // Calculate the coordinates of the intersection points
-                var x2 = circleNode1.Center.X + (dx * a) / distance;
-                var y2 = circleNode1.Center.Y + (dy * a) / distance;
-
-                // Calculate the distance from the intersection point to the centers of the circles
-                var h = Math.Sqrt(circleNode1.Radius * circleNode1.Radius - a * a);
-
-                // Calculate the coordinates of the intersection points
-                var x3 = x2 + (h * dy) / distance;
-                var y3 = y2 - (h * dx) / distance;
-                var x4 = x2 - (h * dy) / distance;
-                var y4 = y2 + (h * dx) / distance;
-
-                // Add the intersection points to the list
-                intersections.Add(new PointNode(x3, y3));
-                intersections.Add(new PointNode(x4, y4));
-            }
+            LE.poiND.Add(pointNode.Name, new PointF(new Random().Next(150, 300), new Random().Next(150, 300)));
+            return pointNode;
         }
-        else if (figure1 is CircleNode circleNode1_3 && figure2 is LineNode lineNode1)
+        else
         {
-            // Calculate the distance between the center of the circle and the line
-            var dx = lineNode1.A.X - circleNode1_3.Center.X;
-            var dy = lineNode1.A.Y - circleNode1_3.Center.Y;
-            var distance = Math.Sqrt(dx * dx + dy * dy);
-
-            // Calculate the distance from the center of the circle to the intersection point
-            var a = (lineNode1.A.X * lineNode1
-
+            var point = PointBuilder(pointNode);
+            LE.poiND.Add(pointNode.Name, point.Item2); // Add the PointF to the dictionary
+            return pointNode;
         }
-        return intersections;
+    }
+    private object CircleNHandler(CircleNode circleNode)
+    {
+        if (circleNode.Center is null && circleNode.Radius is null)
+        {
+            LE.ToDraw toDraw = new()
+            {
+                name = circleNode.name,
+                color = LE.Color.First(),
+                figure = "CircleNode",
+                points = new PointF[] { new(x: new Random().Next(150, 300), y: new Random().Next(150, 300)) },
+                rad = new Random().Next(0, 500),
+                comment = null!
+            };
+            LE.toDraws.Add(toDraw);
+            return null!;
+        }
+        else
+        {
+            LE.toDraws.Add(CircleBuilder(circleNode));
+            return null!;
+        }
+    }
+    private object LineNHandler(LineNode lineNode)
+    {
+        if (lineNode.A is null && lineNode.B is null)
+        {
+            LE.ToDraw toDraw = new()
+            {
+                name = lineNode.Name,
+                color = LE.Color.First(),
+                figure = "LineNode",
+                points = new PointF[]
+                {
+                    new(new Random().Next(150, 300), new Random().Next(150, 300)),
+                    new(new Random().Next(150, 300), new Random().Next(150, 300))
+                },
+                comment = null!
+            };
+            LE.toDraws.Add(toDraw);
+            return null!;
+        }
+        else
+        {
+            LE.toDraws.Add(LineBuilder(lineNode));
+            return null!;
+        }
+    }
+    private object SegmentNHandler(SegmentNode segmentNode)
+    {
+        if (segmentNode.A is null && segmentNode.B is null)
+        {
+            LE.ToDraw toDraw = new()
+            {
+                name = segmentNode.Name,
+                color = LE.Color.First(),
+                figure = "SegmentNode",
+                points = new PointF[]
+                {
+                    new(new Random().Next(150, 300), new Random().Next(150, 300)),
+                    new(new Random().Next(150, 300), new Random().Next(150, 300))
+                },
+                comment = null!
+            };
+            LE.toDraws.Add(toDraw);
+            return null!;
+        }
+        else
+        {
+            LE.toDraws.Add(SegBuilder(segmentNode));
+            return null!;
+        }
+    }
+    private object RayNHandler(RayNode rayNode)
+    {
+        if (rayNode.P1 is null && rayNode.P2 is null)
+        {
+            LE.ToDraw toDraw = new()
+            {
+                name = rayNode.Name,
+                color = LE.Color.First(),
+                figure = "RayNode",
+                points = new PointF[]
+                {
+                    new(new Random().Next(150, 300), new Random().Next(150, 300)),
+                    new(new Random().Next(150, 300), new Random().Next(150, 300))
+                },
+                comment = null!
+            };
+            LE.toDraws.Add(toDraw);
+            return null!;
+        }
+        else
+        {
+            LE.toDraws.Add(RayBuilder(rayNode));
+            return null!;
+        }
+    }
+    private object ArcNHandler(ArcNode arcNode)
+    {
+        if (arcNode.Center is null && arcNode.P1 is null && arcNode.P2 is null && arcNode.Measure is null)
+        {
+            LE.ToDraw toDraw = new()
+            {
+                name = arcNode.Name,
+                color = LE.Color.First(),
+                figure = "ArcNode",
+                points = new PointF[]
+                {
+                    new(new Random().Next(150, 300), new Random().Next(150, 300)),
+                    new(new Random().Next(150, 300), new Random().Next(150, 300)),
+                    new(new Random().Next(150, 300), new Random().Next(150, 300))
+                },
+                rad = new Random().Next(0, 500),
+                comment = null!
+            };
+            LE.toDraws.Add(toDraw);
+            return null!;
+        }
+        else
+        {
+            ArcBuilder(arcNode);
+            return null!;
+        }
+    }
+    private object FigureHandler(Figure figure)
+    {
+        return figure switch
+        {
+            CircleNode circleNode => CircleNHandler(circleNode),
+            LineNode lineNode => LineNHandler(lineNode),
+            SegmentNode segmentNode => SegmentNHandler(segmentNode),
+            RayNode rayNode => RayNHandler(rayNode),
+            ArcNode arcNode => ArcNHandler(arcNode),
+            PointNode pointNode => PointNodeHandler(pointNode),
+            _ => throw new Exception($"Unexpected node type {figure.GetType()}"),
+        };
     }
 
+    private object SequenceHandler(SequenceNode sequenceNode)
+    {
+        List<object> evaluatedNodes = new();
+        foreach (var node in sequenceNode.Nodes)
+        {
+            object result = Visit(node);
+            evaluatedNodes.Add(result);
+        }
+        DeclaredSequenceNode declaredSequenceNode = new(evaluatedNodes, sequenceNode.Identifier);
+        LE.Seqs.Add(declaredSequenceNode);
+        return null!;
+    }
+
+    private object IntersectHandler(IntersectNode intersectNode)
+    {
+        var figure1 = Visit(intersectNode.Figure1);
+        var figure2 = Visit(intersectNode.Figure2);
+
+        var intersection = CalculateIntersection((Node)figure1, (Node)figure2);
+
+        // Rest of the code...
+        return intersection;
+    }
+
+    private List<PointNode> CalculateIntersection(Node figure1, Node figure2)
+    {
+        var intersectionPoints = new List<PointNode>();
+
+        if (figure1 is CircleNode circle1 && figure2 is CircleNode circle2)
+        {
+            PointF center1 = (PointF)Visit(circle1.Center);
+            PointF center2 = (PointF)Visit(circle2.Center);
+            double radius1 = (double)Visit(circle1.Radius);
+            double radius2 = (double)Visit(circle2.Radius);
+
+            double dx = center2.X - center1.X;
+            double dy = center2.Y - center1.Y;
+            double distance = Math.Sqrt(dx * dx + dy * dy);
+
+            // Check if there's no solution
+            if (distance > radius1 + radius2 || distance < Math.Abs(radius1 - radius2))
+            {
+                // The circles are separate or one circle is contained within the other
+                return intersectionPoints;
+            }
+
+            double a = (radius1 * radius1 - radius2 * radius2 + distance * distance) / (2 * distance);
+            double h = Math.Sqrt(radius1 * radius1 - a * a);
+
+            double cx2 = center1.X + a * (center2.X - center1.X) / distance;
+            double cy2 = center1.Y + a * (center2.Y - center1.Y) / distance;
+
+            // Get the points of intersection
+            double intersectionX1 = cx2 + h * (center2.Y - center1.Y) / distance;
+            double intersectionY1 = cy2 - h * (center2.X - center1.X) / distance;
+            double intersectionX2 = cx2 - h * (center2.Y - center1.Y) / distance;
+            double intersectionY2 = cy2 + h * (center2.X - center1.X) / distance;
+
+            intersectionPoints.Add(new PointNode("Intersection1", new ValueNode(intersectionX1), new ValueNode(intersectionY1)));
+            intersectionPoints.Add(new PointNode("Intersection2", new ValueNode(intersectionX2), new ValueNode(intersectionY2)));
+        }
+        else if (figure1 is CircleNode circle && figure2 is LineNode line)
+        {
+            // Calculate intersection of a circle and a line
+        }
+
+        return intersectionPoints;
+    }
+
+    #region FigBuilder
     private LE.ToDraw ArcBuilder(ArcNode arcNode)
     {
 
@@ -590,9 +595,9 @@ public class Evaluator
             figure = "ArcNode",
             points = new PointF[]
             {
-                (PointF)Visit(node: arcNode.Center),
-                (PointF)Visit(node: arcNode.P1),
-                (PointF)Visit(node: arcNode.P2)
+                    (PointF)Visit(node: arcNode.Center),
+                    (PointF)Visit(node: arcNode.P1),
+                    (PointF)Visit(node: arcNode.P2)
             },
             rad = (double)Visit(node: arcNode.Measure),
             comment = null!
@@ -628,8 +633,8 @@ public class Evaluator
             figure = "RayNode",
             points = new PointF[]
             {
-                (PointF)Visit(node: rayNode.P1),
-                (PointF)Visit(node: rayNode.P2)
+                    (PointF)Visit(node: rayNode.P1),
+                    (PointF)Visit(node: rayNode.P2)
             },
             comment = null!
         };
@@ -645,8 +650,8 @@ public class Evaluator
             figure = "LineNode",
             points = new PointF[]
             {
-                (PointF)Visit(node: lineNode.A),
-                (PointF)Visit(node: lineNode.B)
+                    (PointF)Visit(node: lineNode.A),
+                    (PointF)Visit(node: lineNode.B)
             },
             comment = null!
         };
@@ -670,4 +675,5 @@ public class Evaluator
     {
         return (pointNode.Name, new PointF(Convert.ToSingle(Visit(node: pointNode.X)), Convert.ToSingle(Visit(node: pointNode.Y))));
     }
+    #endregion
 }

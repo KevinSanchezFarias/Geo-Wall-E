@@ -14,3 +14,12 @@ public class CircleNode : Figure
         Comment = comment;
     }
 }
+
+public class EvaluatedCircleNode : CircleNode
+{
+    public EvaluatedCircleNode(string name, Node center, Node radius, Node comment)
+        : base(name, center, radius, null)
+    {
+    }
+}
+
