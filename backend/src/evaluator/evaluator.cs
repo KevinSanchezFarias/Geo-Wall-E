@@ -380,13 +380,13 @@ public class Evaluator
                     rad = new Random().Next(0, 500),
                     comment = null!
                 };
-                //LE.toDraws.Add(toDraw);
-                return toDraw;
+                LE.toDraws.Add(toDraw);
+                return null!;
             }
             else
             {
-                //LE.toDraws.Add(CircleBuilder(circleNode));
-                return CircleBuilder(circleNode);
+                LE.toDraws.Add(CircleBuilder(circleNode));
+                return null!;
             }
         }
         object PointNodeHandler(PointNode pointNode)
@@ -417,8 +417,8 @@ public class Evaluator
         }
         object IntersectHandler(IntersectNode intersectNode)
         {
-            var figure1 = (Figure)Visit(intersectNode.Figure1);
-            var figure2 = (Figure)Visit(intersectNode.Figure2);
+            var figure1 = intersectNode.Figure1;
+            var figure2 = intersectNode.Figure2;
 
             // TODO: Implement your intersection logic here.
             // This could be a method that takes two figures and returns their intersection.
@@ -524,26 +524,59 @@ public class Evaluator
         #endregion
     }
 
-    private static List<object> CalculateIntersection(Figure figure1, Figure figure2)
+    private static List<object> CalculateIntersection(Node figure1, Node figure2)
     {
         // Create a list to store the intersection points
         List<object> intersections = new();
 
-        // TODO: Implement your intersection calculation logic here
-        // This could involve iterating over the points in the figures, checking for overlaps, etc.
+        if (figure1 is CircleNode circleNode1 && figure2 is CircleNode circleNode1_2)
+        {
 
-        // For example:
-        // foreach (var point1 in figure1.Points)
-        // {
-        //     foreach (var point2 in figure2.Points)
-        //     {
-        //         if (AreIntersecting(point1, point2))
-        //         {
-        //             intersections.Add(point1);
-        //         }
-        //     }
-        // }
+            // Calculate the distance between the centers of the circles
+            var dx = circleNode1.Center.X - circleNode1_2.Center.X;
+            var dy = circleNode1.Center.Y - circleNode1_2.Center.Y;
+            var distance = Math.Sqrt(dx * dx + dy * dy);
 
+            // Check if the circles are the same
+            if (distance == 0 && circleNode1.Radius == circleNode1_2.Radius)
+            {
+                // If the circles are the same, return the first circle
+                intersections.Add(circleNode1);
+            }
+            else
+            {
+                // Calculate the distance from the first circle to the intersection point
+                var a = (circleNode1.Radius * circleNode1.Radius - circleNode1_2.Radius * circleNode1_2.Radius + distance * distance) / (2 * distance);
+
+                // Calculate the coordinates of the intersection points
+                var x2 = circleNode1.Center.X + (dx * a) / distance;
+                var y2 = circleNode1.Center.Y + (dy * a) / distance;
+
+                // Calculate the distance from the intersection point to the centers of the circles
+                var h = Math.Sqrt(circleNode1.Radius * circleNode1.Radius - a * a);
+
+                // Calculate the coordinates of the intersection points
+                var x3 = x2 + (h * dy) / distance;
+                var y3 = y2 - (h * dx) / distance;
+                var x4 = x2 - (h * dy) / distance;
+                var y4 = y2 + (h * dx) / distance;
+
+                // Add the intersection points to the list
+                intersections.Add(new PointNode(x3, y3));
+                intersections.Add(new PointNode(x4, y4));
+            }
+        }
+        else if (figure1 is CircleNode circleNode1_3 && figure2 is LineNode lineNode1)
+        {
+            // Calculate the distance between the center of the circle and the line
+            var dx = lineNode1.A.X - circleNode1_3.Center.X;
+            var dy = lineNode1.A.Y - circleNode1_3.Center.Y;
+            var distance = Math.Sqrt(dx * dx + dy * dy);
+
+            // Calculate the distance from the center of the circle to the intersection point
+            var a = (lineNode1.A.X * lineNode1
+
+        }
         return intersections;
     }
 
