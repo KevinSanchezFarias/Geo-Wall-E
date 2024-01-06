@@ -63,7 +63,7 @@ public partial class MainForm : Form
     {
         int canvasWidth = ClientSize.Width;
         int canvasHeight = ClientSize.Height;
-        panel.Size = new Size(canvasWidth, (int)(canvasHeight * 0.92));
+        panel.Size = new Size(canvasWidth, (int)(canvasHeight * 0.925));
         panel.Location = new Point((ClientSize.Width - canvasWidth) / 2, 0);
     }
     /// <summary>
@@ -118,8 +118,6 @@ public partial class MainForm : Form
             }
         }
     }
-
-    // Modify your ShowErrorMessage method to use the TextBox
     private void ShowMessage(string errorMessage, bool error)
     {
         errorTextBox.ForeColor = error ? ColorTranslator.FromHtml("#ed8796") : ColorTranslator.FromHtml("#a2c95d");

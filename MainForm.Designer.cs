@@ -29,9 +29,8 @@ partial class MainForm
     private void InitializeComponent()
     {
         //Background
-        BackColor = ColorTranslator.FromHtml("#24273a");
+        //BackColor = ColorTranslator.FromHtml("#24273a");
 
-        // Initialize the TextBox somewhere in your code, e.g. in your form's constructor
         errorTextBox = new TextBox();
         errorTextBox.Multiline = true;
         errorTextBox.ScrollBars = ScrollBars.Vertical;
@@ -47,21 +46,24 @@ partial class MainForm
         button1.Image = new Bitmap("./img/play.png");
         button1.ImageAlign = ContentAlignment.MiddleCenter;
         button1.Image = (Image)(new Bitmap(this.button1.Image, new Size(20, 20)));
-        button1.Anchor = AnchorStyles.Left | AnchorStyles.Top;
         button1.Click += new EventHandler(SubmitCommands);
+        button1.FlatStyle = FlatStyle.Popup;
+        button1.BackColor = ColorTranslator.FromHtml("#181926");
+
         //Button 2
         button2.Image = new Bitmap("./img/trash.png");
         button2.ImageAlign = ContentAlignment.MiddleCenter;
         button2.Image = (Image)(new Bitmap(this.button2.Image, new Size(20, 20)));
-        button2.Anchor = AnchorStyles.Left | AnchorStyles.Top;
         button2.Click += new System.EventHandler(ClearGraphics);
+        button2.FlatStyle = FlatStyle.Popup;
+        button2.BackColor = ColorTranslator.FromHtml("#181926");
 
         //Graph panel
         panel.Anchor = AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Bottom;
         panel.BackColor = System.Drawing.Color.FromArgb(1, 1, 1, 0);
         panel.Location = new System.Drawing.Point(0, 0);
         panel.Size = new System.Drawing.Size((int)(this.ClientSize.Width * 0.7), (int)(this.ClientSize.Height * 0.8));
-
+        panel.BackColor = ColorTranslator.FromHtml("#24273a");
         //Text box
         textBox1 = new System.Windows.Forms.TextBox();
         textBox1.Anchor = AnchorStyles.Left | AnchorStyles.Top;
@@ -72,25 +74,25 @@ partial class MainForm
 
 
         //MainForm
-        this.components = new System.ComponentModel.Container();
-        this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+        components = new System.ComponentModel.Container();
+        AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
         //this.ClientSize = new System.Drawing.Size(800, 450);
-        this.Text = "Geo Wall-E";
+        Text = "Geo Wall-E";
 
 
-        this.textBox1.Location = new System.Drawing.Point(20, 20);
-        this.textBox1.Anchor = AnchorStyles.None;
-        this.button1.Anchor = AnchorStyles.None;
-        this.button2.Anchor = AnchorStyles.None;
+        textBox1.Location = new System.Drawing.Point(20, 20);
+        textBox1.Anchor = AnchorStyles.None;
+        button1.Anchor = AnchorStyles.None;
+        button2.Anchor = AnchorStyles.None;
 
-        this.Controls.Add(panel);
-        this.Controls.Add(this.button1);
-        this.Controls.Add(this.button2);
-        this.Controls.Add(this.textBox1);
-        this.Controls.Add(this.errorTextBox);
+        Controls.Add(panel);
+        Controls.Add(button1);
+        Controls.Add(button2);
+        Controls.Add(textBox1);
+        Controls.Add(errorTextBox);
 
-        this.Controls.SetChildIndex(textBox1, 0);
-        this.Resize += new EventHandler(Form1_SizeChanged);
+        Controls.SetChildIndex(textBox1, 0);
+        Resize += new EventHandler(Form1_SizeChanged);
     }
 
     #endregion
