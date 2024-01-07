@@ -95,12 +95,6 @@ public partial class Lexer
                 case ';':
                     Advance();
                     LexTokens.Add(new Token(TokenType.EOL, ";", Line, Column));
-                    if (CurrentChar == '\r')
-                    {
-                        Advance();
-                        Line++;
-                        Column = 1;
-                    }
                     break;
                 case ':':
                     Advance();

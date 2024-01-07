@@ -17,14 +17,14 @@ public class Interpreter
         short lineX = 1;
         List<LE.ToDraw> toDraws = new();
         // Split the string into lines
-        var lines = input.Split(new[] { ";\r" }, StringSplitOptions.RemoveEmptyEntries);
+        //var lines = input.Split(new[] { ";\r" }, StringSplitOptions.RemoveEmptyEntries);
         CleanFigs();
-        foreach (var line in lines)
+        var lexer = new Lexer(input);
+        for (short i = 0; i < lexer.LexTokens.Count; i++)
         {
             object lineResult;
             //try
             //{
-            var lexer = new Lexer(line);
             var parser = new Parser(lexer.LexTokens);
             var ast = parser.Parse();
 

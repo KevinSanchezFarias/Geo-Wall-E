@@ -11,6 +11,15 @@ public partial class Parser
     private readonly Dictionary<string, Node> ImportedModules = new();
     private Token? CurrentToken => currentTokenIndex < Tokens.Count ? Tokens[currentTokenIndex] : null;
 
+    private Node ParseEol
+    {
+        get
+        {
+            _ = ConsumeToken(TokenType.EOF);
+            return ParseExpression();
+        }
+    }
+
     /// <summary>
     /// Represents a parser that processes a list of tokens.
     /// </summary>
@@ -117,6 +126,7 @@ public partial class Parser
                 TokenType.Identifier => ParseIdentifier,
                 TokenType.ImportKeyword => ParseImport,
                 TokenType.IntersectKeyword => ParseIntersect,
+                TokenType.EOL => ParseEol,
                 _ => throw new Exception($"Unexpected token {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}"),
             };
         }
