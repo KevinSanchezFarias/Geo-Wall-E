@@ -22,69 +22,93 @@ public partial class Parser
         {
             var token = ConsumeToken(TokenType.Identifier);
 
-            // First, check if the identifier already exists and return its value
-            Node? existingIdentifier = token.Value switch
-            {
-                var value when LE.Seqs.Any(s => s.Identifier == value) => LE.Seqs.First(s => s.Identifier == value),
-                var value when LE.cDN.Any(p => p.Identifier == value) => LE.cDN.First(p => p.Identifier == value),
-                var value when LE.DeclaredConst.Any(p => p.Identifier == value) => LE.DeclaredConst.First(p => p.Identifier == value),
-                var value when LE.poiND.Any(p => p.Key == value) => new IdentifierNode(token.Value),
-                _ => null
-            };
-            if (existingIdentifier != null)
-            {
-                return existingIdentifier!;
-            }
-            // If the identifier doesn't exist, try to declare it
             return CurrentToken?.Type switch
             {
                 TokenType.Operator when CurrentToken?.Value == "=" => ParseDeclareSimpleVar(token),
-                TokenType.Comma => MultiAssignParse(token),
+                TokenType.Comma when WhenToMultiAssign() => MultiAssignParse(token),
                 TokenType.LParen => FunctionCallParse(token),
                 _ => new IdentifierNode(token.Value)
             };
-            Node MultiAssignParse(Token token)
+
+            bool WhenToMultiAssign()
             {
-                // Parse multiple assignments
-                var identifiers = new List<string> { token.Value };
-                while (CurrentToken?.Type == TokenType.Comma)
+                int peekIndex = currentTokenIndex + 1;
+
+                // Check if there are enough tokens left for a multi-assignment
+                if (peekIndex >= Tokens.Count)
                 {
-                    _ = ConsumeToken(TokenType.Comma);
-                    identifiers.Add(ConsumeToken(TokenType.Identifier).Value);
+                    return false;
                 }
-                _ = ConsumeToken(TokenType.Operator);
-                Node sequence = ParseExpression();
-                return new MultiAssignmentNode(identifiers, sequence);
-            }
-            Node FunctionCallParse(Token token)
-            {
-                // Parse a function call
-                var args = new List<Node>();
-                _ = ConsumeToken(TokenType.LParen);
-                while (CurrentToken?.Type != TokenType.RParen)
+
+                // Check if the next token is an identifier
+                if (Tokens[peekIndex]?.Type != TokenType.Identifier)
                 {
-                    args.Add(ParseExpression());
-                    if (CurrentToken?.Type == TokenType.Comma) { _ = ConsumeToken(TokenType.Comma); }
+                    return false;
                 }
-                _ = ConsumeToken(TokenType.RParen);
-                // Check if the function name is in the list of predefined functions
-                return LE.predefinedFunctions.ContainsKey(token.Value)
-                    ? new FunctionPredefinedNode(token.Value, args)
-                    : FDN.Any(f => f.Name == token.Value)
-                        ? (Node)new FunctionCallNode(token.Value, args)
-                        : throw new Exception($"Undefined function {token.Value}");
-            }
-            Node ParseDeclareSimpleVar(Token token)
-            {
-                _ = ConsumeToken(TokenType.Operator);
-                if (CurrentToken?.Type == TokenType.LBrace)
+
+                // Skip over identifiers and commas
+                while (peekIndex < Tokens.Count && (Tokens[peekIndex]?.Type == TokenType.Identifier || Tokens[peekIndex]?.Type == TokenType.Comma))
                 {
-                    return ParseSequence(token.Value);
+                    peekIndex++;
                 }
-                Node expression = ParseExpression();
-                return new ConstDeclarationNode(token.Value, expression);
+
+                // Check if the token after the identifiers and commas is an '='
+                return peekIndex < Tokens.Count && Tokens[peekIndex]?.Type == TokenType.Operator && Tokens[peekIndex]?.Value == "=";
             }
         }
+    }
+
+    private Token? PeekNextToken()
+    {
+        if (currentTokenIndex + 1 < Tokens.Count)
+        {
+            return Tokens[currentTokenIndex + 1];
+        }
+        return null;
+    }
+
+    private Node ParseDeclareSimpleVar(Token token)
+    {
+        _ = ConsumeToken(TokenType.Operator);
+        if (CurrentToken?.Type == TokenType.LBrace)
+        {
+            return ParseSequence(token.Value);
+        }
+        Node expression = ParseExpression();
+        return new ConstDeclarationNode(token.Value, expression);
+    }
+
+    private Node FunctionCallParse(Token token)
+    {
+        // Parse a function call
+        var args = new List<Node>();
+        _ = ConsumeToken(TokenType.LParen);
+        while (CurrentToken?.Type != TokenType.RParen)
+        {
+            args.Add(ParseExpression());
+            if (CurrentToken?.Type == TokenType.Comma) { _ = ConsumeToken(TokenType.Comma); }
+        }
+        _ = ConsumeToken(TokenType.RParen);
+        // Check if the function name is in the list of predefined functions
+        return LE.predefinedFunctions.ContainsKey(token.Value)
+            ? new FunctionPredefinedNode(token.Value, args)
+            : FDN.Any(f => f.Name == token.Value)
+                ? (Node)new FunctionCallNode(token.Value, args)
+                : throw new Exception($"Undefined function {token.Value}");
+    }
+
+    private Node MultiAssignParse(Token token)
+    {
+        // Parse multiple assignments
+        var identifiers = new List<string> { token.Value };
+        while (CurrentToken?.Type == TokenType.Comma)
+        {
+            _ = ConsumeToken(TokenType.Comma);
+            identifiers.Add(ConsumeToken(TokenType.Identifier).Value);
+        }
+        _ = ConsumeToken(TokenType.Operator);
+        Node sequence = ParseExpression();
+        return new MultiAssignmentNode(identifiers, sequence);
     }
     private Node ParseVariableDeclaration
     {
@@ -96,6 +120,7 @@ public partial class Parser
             var value = ParseExpression();
             if (CurrentToken?.Type == TokenType.EOL)
             {
+                _ = ConsumeToken(TokenType.EOL);
                 return ParseMultiLet(identifier, value);
             }
             else
@@ -110,11 +135,21 @@ public partial class Parser
 
     private Node ParseMultiLet(Token identifier, Node value)
     {
-        var declarations = new List<VariableDeclarationNode>();
+        var scope = new Dictionary<string, Node>
+        {
+            // Add the first expression to the scope
+            [identifier.Value] = value
+        };
 
         while (CurrentToken?.Type != TokenType.InKeyword)
         {
-            var id = ParseExpression();
+            // Parse the next expression
+            var nextIdentifier = ConsumeToken(TokenType.Identifier);
+            _ = ConsumeToken(TokenType.Operator); // consume the '=' operator
+            var nextValue = ParseExpression();
+
+            // Add the expression to the scope
+            scope[nextIdentifier.Value] = nextValue;
 
             if (CurrentToken?.Type == TokenType.EOL)
             {
@@ -125,7 +160,14 @@ public partial class Parser
         _ = ConsumeToken(TokenType.InKeyword);
         var body = ParseExpression();
 
-        return new MultipleVariableDeclarationNode(declarations, body);
+        // Create the MultipleVariableDeclarationNode with the parsed scope and body
+        var multiLetNode = new MultipleVariableDeclarationNode(body);
+        foreach (var kvp in scope)
+        {
+            multiLetNode.Scope[kvp.Key] = kvp.Value;
+        }
+
+        return multiLetNode;
     }
 
     private Node ParseIfExpression
@@ -267,7 +309,7 @@ public partial class Parser
     {
         get
         {
-            _ = ConsumeToken(TokenType.ImportKeyword);
+            /* _ = ConsumeToken(TokenType.ImportKeyword);
             var path = ConsumeToken(TokenType.StringLiteral);
 
             // Check if the file has already been imported
@@ -287,7 +329,7 @@ public partial class Parser
             ev.Evaluate();
 
             // Store the result in a dictionary
-            ImportedModules[path.Value] = result;
+            ImportedModules[path.Value] = result; */
             return new EndNode();
         }
     }

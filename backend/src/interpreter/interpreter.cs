@@ -31,7 +31,7 @@ public class Interpreter
             /*             var semanticAnalyzer = new SemanticAnalyzer();
                         semanticAnalyzer.Analyze(ast); */
 
-            var evaluator = new Evaluator(ast);
+            var evaluator = new Evaluator(null);
             lineResult = evaluator.Evaluate();
 
             lineX++;

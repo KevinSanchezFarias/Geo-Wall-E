@@ -7,8 +7,6 @@ public partial class Parser
     private List<Token> Tokens { get; set; }
     private static List<FunctionDeclarationNode> fDN = new();
     private int currentTokenIndex = 0;
-    private readonly HashSet<string> ImportedFiles = new();
-    private readonly Dictionary<string, Node> ImportedModules = new();
     private Token? CurrentToken => currentTokenIndex < Tokens.Count ? Tokens[currentTokenIndex] : null;
 
     private Node ParseEol
@@ -42,9 +40,22 @@ public partial class Parser
     /// Represents a node in the parse tree.
     /// </summary>
     /// <returns>The parsed node.</returns>
-    public Node Parse()
+    public List<Node> Parse()
     {
-        return ParseExpression();
+        var nodes = new List<Node>();
+
+        while (CurrentToken?.Type != TokenType.EOF)
+        {
+            nodes.Add(ParseExpression());
+
+            // If the next token is a semicolon, consume it
+            if (CurrentToken?.Type == TokenType.EOL)
+            {
+                _ = ConsumeToken(TokenType.EOL);
+            }
+        }
+
+        return nodes;
     }
     private Node ParseExpression()
     {

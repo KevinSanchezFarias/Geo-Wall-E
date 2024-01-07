@@ -169,10 +169,10 @@ public class Evaluator
         {
             scopes.Push(new Dictionary<string, object>()); // Enter a new scope
 
-            foreach (var varDecl in multipleVarDecl.Declarations)
-            {
-                //scopes.Peek()[varDecl.Identifier] = Visit(varDecl.Value);
-            }
+            //foreach (var varDecl in multipleVarDecl.Body)
+            //{
+            //    //scopes.Peek()[varDecl.Identifier] = Visit(varDecl.Value);
+            //}
 
             var result = Visit(multipleVarDecl.Body);
 
