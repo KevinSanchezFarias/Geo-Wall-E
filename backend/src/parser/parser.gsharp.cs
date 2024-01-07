@@ -86,53 +86,48 @@ public partial class Parser
             }
         }
     }
-    private Node ParseVariableDeclaration()
-    {
-        _ = ConsumeToken(TokenType.LetKeyword);
-
-        return CurrentToken?.Type == TokenType.LLinq ? ParseMultipleVariableDeclaration : ParseSingleVariableDeclaration;
-    }
-    private Node ParseSingleVariableDeclaration
+    private Node ParseVariableDeclaration
     {
         get
         {
+            _ = ConsumeToken(TokenType.LetKeyword);
             var identifier = ConsumeToken(TokenType.Identifier);
             _ = ConsumeToken(TokenType.Operator);
             var value = ParseExpression();
-            _ = ConsumeToken(TokenType.InKeyword);
-            var body = ParseExpression();
-            return new VariableDeclarationNode(identifier.Value, value, body);
-        }
-    }
-    private Node ParseMultipleVariableDeclaration
-    {
-        get
-        {
-            _ = ConsumeToken(TokenType.LLinq);
-            _ = ConsumeToken(TokenType.LBrace);
-
-            var declarations = new List<VariableDeclarationNode>();
-
-            while (CurrentToken?.Type != TokenType.RBrace)
+            if (CurrentToken?.Type == TokenType.EOL)
             {
-                var identifier = ConsumeToken(TokenType.Identifier);
-                _ = ConsumeToken(TokenType.Operator);
-                var value = ParseExpression();
-                declarations.Add(new VariableDeclarationNode(identifier.Value, value, null!));
-
-                if (CurrentToken?.Type == TokenType.Comma)
-                {
-                    _ = ConsumeToken(TokenType.Comma);
-                }
+                return ParseMultiLet(identifier, value);
             }
-
-            _ = ConsumeToken(TokenType.RBrace);
-            _ = ConsumeToken(TokenType.InKeyword);
-            var body = ParseExpression();
-
-            return new MultipleVariableDeclarationNode(declarations, body);
+            else
+            {
+                _ = ConsumeToken(TokenType.InKeyword);
+                var body = ParseExpression();
+                return new VariableDeclarationNode(new ValueNode(identifier), value, body);
+            }
         }
+
     }
+
+    private Node ParseMultiLet(Token identifier, Node value)
+    {
+        var declarations = new List<VariableDeclarationNode>();
+
+        while (CurrentToken?.Type != TokenType.InKeyword)
+        {
+            var id = ParseExpression();
+
+            if (CurrentToken?.Type == TokenType.EOL)
+            {
+                _ = ConsumeToken(TokenType.EOL);
+            }
+        }
+
+        _ = ConsumeToken(TokenType.InKeyword);
+        var body = ParseExpression();
+
+        return new MultipleVariableDeclarationNode(declarations, body);
+    }
+
     private Node ParseIfExpression
     {
         get
@@ -296,5 +291,6 @@ public partial class Parser
             return new EndNode();
         }
     }
+
     #endregion
 }

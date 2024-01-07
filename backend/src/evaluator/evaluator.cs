@@ -171,7 +171,7 @@ public class Evaluator
 
             foreach (var varDecl in multipleVarDecl.Declarations)
             {
-                scopes.Peek()[varDecl.Identifier] = Visit(varDecl.Value);
+                //scopes.Peek()[varDecl.Identifier] = Visit(varDecl.Value);
             }
 
             var result = Visit(multipleVarDecl.Body);
@@ -184,7 +184,7 @@ public class Evaluator
         {
             scopes.Push(new Dictionary<string, object>()); // Enter a new scope
 
-            scopes.Peek()[varDecl.Identifier] = Visit(varDecl.Value);
+            //scopes.Peek()[varDecl.Identifier] = Visit(varDecl.Value);
 
             var result = Visit(varDecl.Body);
 

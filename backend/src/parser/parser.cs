@@ -109,7 +109,7 @@ public partial class Parser
                 TokenType.FunctionKeyword => ParseFunctionDeclaration,
                 TokenType.ColorKeyword => ParseColor,
                 TokenType.RestoreKeyword => ParseRestore,
-                TokenType.LetKeyword => ParseVariableDeclaration(),
+                TokenType.LetKeyword => ParseVariableDeclaration,
                 TokenType.Point => ParsePointExpression,
                 TokenType.IfKeyword => ParseIfExpression,
                 TokenType.Number => ParseNumber,

@@ -6,54 +6,51 @@ namespace WaLI.backend.src.semantic
 {
     public class SemanticAnalyzer
     {
-        // You might have a symbol table here to keep track of variable declarations
-
+        //TODO: Add symbol table
         public void Analyze(Node node)
         {
-            switch (node)
-            {
-                case ConstDeclarationNode constDeclarationNode:
-                    AnalyzeConstDeclaration(constDeclarationNode);
-                    break;
-                /* case Figure figure:
-                    AnalyzeFigure(figure);
-                    break;
-                case SequenceNode sequenceNode:
-                    AnalyzeSequence(sequenceNode);
-                    break;
-                case IntersectNode intersectNode:
-                    AnalyzeIntersect(intersectNode);
-                    break;
-                case MultiAssignmentNode multiAssignmentNode:
-                    AnalyzeMultiAssignment(multiAssignmentNode);
-                    break;
-                case GlobalConstNode globalConstNode:
-                    AnalyzeGlobalConst(globalConstNode);
-                    break;
-                case VariableDeclarationNode variableDeclarationNode:
-                    AnalyzeVariableDeclaration(variableDeclarationNode);
-                    break;
-                case MeasureNode measureNode:
-                    AnalyzeMeasure(measureNode);
-                    break;
-                case IdentifierNode identifierNode:
-                    AnalyzeIdentifier(identifierNode);
-                    break;
-                case FunctionCallNode functionCallNode:
-                    AnalyzeFunctionCall(functionCallNode);
-                    break;
-                case FunctionDeclarationNode functionDeclarationNode:
-                    AnalyzeFunctionDeclaration(functionDeclarationNode);
-                    break;
-                case FunctionPredefinedNode functionPredefinedNode:
-                    AnalyzeFunctionPredefined(functionPredefinedNode);
-                    break; */
-
-                // Add cases for other node types...
-                default:
-                    break;
-                    //throw new Exception($"Unexpected node type {node.GetType()}");
-            }
+            /* switch (node)
+             {
+                 case ConstDeclarationNode constDeclarationNode:
+                     AnalyzeConstDeclaration(constDeclarationNode);
+                     break;
+                 case Figure figure:
+                     AnalyzeFigure(figure);
+                     break;
+                 case SequenceNode sequenceNode:
+                     AnalyzeSequence(sequenceNode);
+                     break;
+                 case IntersectNode intersectNode:
+                     AnalyzeIntersect(intersectNode);
+                     break;
+                 case MultiAssignmentNode multiAssignmentNode:
+                     AnalyzeMultiAssignment(multiAssignmentNode);
+                     break;
+                 case GlobalConstNode globalConstNode:
+                     AnalyzeGlobalConst(globalConstNode);
+                     break;
+                 case VariableDeclarationNode variableDeclarationNode:
+                     AnalyzeVariableDeclaration(variableDeclarationNode);
+                     break;
+                 case MeasureNode measureNode:
+                     AnalyzeMeasure(measureNode);
+                     break;
+                 case IdentifierNode identifierNode:
+                     AnalyzeIdentifier(identifierNode);
+                     break;
+                 case FunctionCallNode functionCallNode:
+                     AnalyzeFunctionCall(functionCallNode);
+                     break;
+                 case FunctionDeclarationNode functionDeclarationNode:
+                     AnalyzeFunctionDeclaration(functionDeclarationNode);
+                     break;
+                 case FunctionPredefinedNode functionPredefinedNode:
+                     AnalyzeFunctionPredefined(functionPredefinedNode);
+                     break; 
+                 default:
+                     break;
+                     throw new Exception($"Unexpected node type {node.GetType()}");
+             }*/
         }
 
         private void AnalyzeFunctionPredefined(FunctionPredefinedNode functionPredefinedNode)
