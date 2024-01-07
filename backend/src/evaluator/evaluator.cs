@@ -13,12 +13,12 @@ public class Evaluator
     /// <summary>
     /// Represents a node in the abstract syntax tree (AST).
     /// </summary>
-    private Node AST { get; set; }
+    private List<Node> AST { get; set; }
     /// <summary>
     /// Initializes a new instance of the Evaluator class.
     /// </summary>
     /// <param name="ast">The abstract syntax tree representing the program.</param>
-    public Evaluator(Node ast) => AST = ast;
+    public Evaluator(List<Node> ast) => AST = ast;
     private Dictionary<string, object> variables = new();
     private readonly Stack<Dictionary<string, object>> scopes = new();
     /// <summary>
@@ -27,21 +27,27 @@ public class Evaluator
     /// <returns>The result of the evaluation.</returns>
     public object Evaluate()
     {
-        var visited = Visit(AST);
-        switch (visited)
+        object result = null!;
+        foreach (var node in AST)
         {
-            case GlobalConstNode gcn:
-                LE.DeclaredConst.Add(gcn);
-                return null!;
-            case DeclaredSequenceNode dsn:
-                LE.Seqs.Add(dsn);
-                return null!;
-            case Figure figure:
-                FigureHandler(figure);
-                return null!;
-            default:
-                return visited;
+            var visited = Visit(node);
+            switch (visited)
+            {
+                case GlobalConstNode gcn:
+                    LE.DeclaredConst.Add(gcn);
+                    break;
+                case DeclaredSequenceNode dsn:
+                    LE.Seqs.Add(dsn);
+                    break;
+                case Figure figure:
+                    FigureHandler(figure);
+                    break;
+                default:
+                    result = visited;
+                    break;
+            }
         }
+        return result;
     }
     /// <summary>
     /// Draws the specified <see cref="DrawNode"/> and returns a list of <see cref="ToDraw"/> objects.
@@ -206,17 +212,9 @@ public class Evaluator
             {
                 return LE.poiND.First(p => p.Key == identifierNode.Identifier).Value;
             }
-            else if (LE.cDN.Any(c => c.Identifier == identifierNode.Identifier))
+            else if (LE.DeclaredConst.Any(p => p.Identifier == identifierNode.Identifier))
             {
-                if (LE.cDN.First(c => c.Identifier == identifierNode.Identifier).Value is ValueNode vnc)
-                {
-                    return vnc.Value;
-                }
-                else
-                {
-                    var constNode = LE.cDN.First(c => c.Identifier == identifierNode.Identifier);
-                    return constNode.Value is Node ConstNode ? Visit(ConstNode) : constNode.Value;
-                }
+                return LE.DeclaredConst.First(p => p.Identifier == identifierNode.Identifier).Value;
             }
             else
             {

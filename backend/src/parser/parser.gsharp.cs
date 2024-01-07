@@ -57,16 +57,6 @@ public partial class Parser
             }
         }
     }
-
-    private Token? PeekNextToken()
-    {
-        if (currentTokenIndex + 1 < Tokens.Count)
-        {
-            return Tokens[currentTokenIndex + 1];
-        }
-        return null;
-    }
-
     private Node ParseDeclareSimpleVar(Token token)
     {
         _ = ConsumeToken(TokenType.Operator);
