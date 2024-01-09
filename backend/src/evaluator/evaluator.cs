@@ -25,9 +25,8 @@ public class Evaluator
     /// Evaluates the abstract syntax tree (AST) and returns the result.
     /// </summary>
     /// <returns>The result of the evaluation.</returns>
-    public object Evaluate()
+    public IEnumerable<object> Evaluate()
     {
-        object result = null!;
         foreach (var node in AST)
         {
             var visited = Visit(node);
@@ -40,14 +39,13 @@ public class Evaluator
                     LE.Seqs.Add(dsn);
                     break;
                 case Figure figure:
-                    FigureHandler(figure);
+                    LE.toDraws.Add((LE.ToDraw)FigureHandler(figure));
                     break;
                 default:
-                    result = visited;
+                    yield return visited;
                     break;
             }
         }
-        return result;
     }
     /// <summary>
     /// Draws the specified <see cref="DrawNode"/> and returns a list of <see cref="ToDraw"/> objects.
@@ -64,12 +62,15 @@ public class Evaluator
         }
         else
         {
-            if (drawNode.Figures is GlobalConstNode gcn && gcn.Value is Figure fg)
+            if (xT is GlobalConstNode gcn && gcn.Value is Figure fg)
             {
                 return FBuild(fg);
             }
-            IdentifierNode x = (IdentifierNode)Visit(new ValueNode(drawNode.Figures));
-            return LE.toDraws.Any(p => x.Identifier == p.name) ? LE.toDraws.First(p => x.Identifier == p.name) : null!;
+            else
+            {
+                var id = Visit((Node)xT);
+                return FBuild((Figure)id);
+            }
         }
 
         object FBuild(Figure figure)
@@ -215,6 +216,10 @@ public class Evaluator
             else if (LE.DeclaredConst.Any(p => p.Identifier == identifierNode.Identifier))
             {
                 return LE.DeclaredConst.First(p => p.Identifier == identifierNode.Identifier).Value;
+            }
+            else if (LE.Seqs.Any(p => p.Identifier == identifierNode.Identifier))
+            {
+                return LE.Seqs.First(p => p.Identifier == identifierNode.Identifier).Nodes;
             }
             else
             {
@@ -365,14 +370,20 @@ public class Evaluator
     {
         if (pointNode.X is null || pointNode.Y is null)
         {
-            LE.poiND.Add(pointNode.Name, new PointF(new Random().Next(150, 300), new Random().Next(150, 300)));
-            return pointNode;
+            LE.ToDraw toDraw = new()
+            {
+                name = pointNode.Name,
+                color = LE.Color.First(),
+                figure = "PointNode",
+                points = new PointF[] { new(new Random().Next(150, 300), new Random().Next(150, 300)) },
+                comment = null!
+            };
+            LE.poiND.Add(pointNode.Name, toDraw.points[0]);
+            return toDraw;
         }
         else
         {
-            var point = PointBuilder(pointNode);
-            LE.poiND.Add(pointNode.Name, point.Item2); // Add the PointF to the dictionary
-            return pointNode;
+            return PointBuilder(pointNode);
         }
     }
     private object CircleNHandler(CircleNode circleNode)
@@ -388,13 +399,13 @@ public class Evaluator
                 rad = new Random().Next(0, 500),
                 comment = null!
             };
-            LE.toDraws.Add(toDraw);
-            return null!;
+            //LE.toDraws.Add(toDraw);
+            return toDraw;
         }
         else
         {
-            LE.toDraws.Add(CircleBuilder(circleNode));
-            return null!;
+            //LE.toDraws.Add(CircleBuilder(circleNode));
+            return CircleBuilder(circleNode);
         }
     }
     private object LineNHandler(LineNode lineNode)
@@ -598,7 +609,7 @@ public class Evaluator
                     (PointF)Visit(node: arcNode.P2)
             },
             rad = (double)Visit(node: arcNode.Measure),
-            comment = null!
+            comment = (string)Visit(arcNode.Comment)
         };
         return toDraw;
 
@@ -616,7 +627,7 @@ public class Evaluator
                 (PointF)Visit(node: segmentNode.A),
                 (PointF)Visit(node: segmentNode.B)
             },
-            comment = null!
+            comment = (string)Visit(segmentNode.Comment)
         };
         return toDraw;
 
@@ -634,7 +645,7 @@ public class Evaluator
                     (PointF)Visit(node: rayNode.P1),
                     (PointF)Visit(node: rayNode.P2)
             },
-            comment = null!
+            comment = (string)Visit(rayNode.Comment)
         };
         return toDraw;
 
@@ -651,7 +662,8 @@ public class Evaluator
                     (PointF)Visit(node: lineNode.A),
                     (PointF)Visit(node: lineNode.B)
             },
-            comment = null!
+            comment = (string)Visit(lineNode.Comment)
+
         };
         return toDraw;
     }
@@ -664,14 +676,26 @@ public class Evaluator
             figure = "CircleNode",
             points = new PointF[] { (PointF)Visit(node: circleNode.Center) },
             rad = (double)Visit(node: circleNode.Radius),
-            comment = null!
+            comment = (string)Visit(circleNode.Comment)
         };
 
         return toDraw;
     }
-    private (string, PointF) PointBuilder(PointNode pointNode)
+    private LE.ToDraw PointBuilder(PointNode pointNode)
     {
-        return (pointNode.Name, new PointF(Convert.ToSingle(Visit(node: pointNode.X)), Convert.ToSingle(Visit(node: pointNode.Y))));
+        var x = (double)Visit(node: pointNode.X);
+        var y = (double)Visit(node: pointNode.Y);
+
+        LE.ToDraw toDraw = new()
+        {
+            name = pointNode.Name,
+            color = LE.Color.First(),
+            figure = "PointNode",
+            points = new PointF[] { new((float)x, (float)y) },
+            comment = null!
+        };
+        LE.poiND.Add(pointNode.Name, toDraw.points[0]);
+        return toDraw;
     }
     #endregion
 }
