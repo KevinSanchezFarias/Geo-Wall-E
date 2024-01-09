@@ -634,7 +634,7 @@ public class Evaluator
                 (PointF)Visit(node: segmentNode.A),
                 (PointF)Visit(node: segmentNode.B)
             },
-            comment = (string)Visit(segmentNode.Comment)
+            comment = null!
         };
         return toDraw;
 
@@ -683,7 +683,7 @@ public class Evaluator
             figure = "CircleNode",
             points = new PointF[] { (PointF)Visit(node: circleNode.Center) },
             rad = (double)Visit(node: circleNode.Radius),
-            comment = (string)Visit(circleNode.Comment)
+            comment = null!
         };
 
         return toDraw;
