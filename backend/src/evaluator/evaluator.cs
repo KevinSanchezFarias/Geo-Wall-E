@@ -304,6 +304,10 @@ public class Evaluator
             {
                 sequence = list;
             }
+            else if (evaluatedSequence is List<PointNode> pnds)
+            {
+                sequence = pnds.Cast<object>().ToList();
+            }
             else
             {
                 throw new Exception("The right-hand side of a multi-assignment must be a sequence.");
@@ -545,12 +549,12 @@ public class Evaluator
         return null!;
     }
 
-    private object IntersectHandler(IntersectNode intersectNode)
+    private List<PointNode> IntersectHandler(IntersectNode intersectNode)
     {
         var figure1 = Visit(intersectNode.Figure1);
         var figure2 = Visit(intersectNode.Figure2);
 
-        var intersection = CalculateIntersection((Node)figure1, (Node)figure2);
+        List<PointNode> intersection = CalculateIntersection((Node)figure1, (Node)figure2);
 
         // Rest of the code...
         return intersection;
