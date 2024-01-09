@@ -317,7 +317,14 @@ public class Evaluator
                 {
                     // If there is a corresponding value in the sequence, assign it to the identifier
                     var value = sequence[i];
-                    LE.DeclaredConst.Add(new GlobalConstNode(identifier: identifier, value: Visit((Node)value)));
+                    if (value is PointNode pointNode)
+                    {
+                        LE.poiND.Add(identifier, new PointF(Convert.ToSingle(Visit(node: pointNode.X)), Convert.ToSingle(Visit(node: pointNode.Y))));
+                    }
+                    else
+                    {
+                        LE.DeclaredConst.Add(new GlobalConstNode(identifier: identifier, value: Visit((Node)value)));
+                    }
                 }
             }
 
