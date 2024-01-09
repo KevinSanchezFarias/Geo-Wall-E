@@ -114,6 +114,7 @@ public class Evaluator
             SequenceNode sequenceNode => SequenceHandler(sequenceNode),
             DeclaredSequenceNode declaredSequenceNode => declaredSequenceNode,
             MultipleVariableDeclarationNode multipleVarDecl => MultipleVarHandler(multipleVarDecl),
+            null => null!,
             _ => throw new Exception($"Unexpected node type {node.GetType()}"),
         };
         #region EvaluatorMethods
@@ -683,7 +684,7 @@ public class Evaluator
             figure = "CircleNode",
             points = new PointF[] { (PointF)Visit(node: circleNode.Center) },
             rad = (double)Visit(node: circleNode.Radius),
-            comment = null!
+            comment = (string)Visit(circleNode.Comment)
         };
 
         return toDraw;
