@@ -100,11 +100,11 @@ namespace WaLI.backend.src.semantic
 
         private void AnalyzeConstDeclaration(ConstDeclarationNode constDeclarationNode)
         {
-            // Check if the identifier is already declared in the current scope
-            if (LE.DeclaredConst.Any(node => node.Identifier == constDeclarationNode.Identifier))
+            /* // Check if the identifier is already declared in the current scope
+            if (ListExtrasScoper.DeclaredConst.Any(node => node.Identifier == constDeclarationNode.Identifier))
             {
                 throw new Exception($"Identifier {constDeclarationNode.Identifier} is already declared in the current scope");
-            }
+            } */
 
             // If the identifier is not already declared, add it to the symbol table
             //evariables[constDeclarationNode.Identifier] = null; // Or some default value

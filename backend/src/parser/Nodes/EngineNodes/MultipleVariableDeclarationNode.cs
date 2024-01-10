@@ -1,12 +1,14 @@
-namespace Nodes;
-
-public class MultipleVariableDeclarationNode : Node
+namespace Nodes
 {
-    public Dictionary<string, Node> Scope { get; } = new Dictionary<string, Node>();
-    public Node Body { get; }
-
-    public MultipleVariableDeclarationNode(Node body)
+    public class MultipleVariableDeclarationNode : Node
     {
-        Body = body;
+        public List<ConstDeclarationNode> VariableDeclarations { get; } = new();
+        public Node Body { get; }
+
+        public MultipleVariableDeclarationNode(List<ConstDeclarationNode> variableDeclarations, Node body)
+        {
+            VariableDeclarations = variableDeclarations;
+            Body = body;
+        }
     }
 }

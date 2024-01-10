@@ -80,7 +80,8 @@ public partial class Parser
         }
         _ = ConsumeToken(TokenType.RParen);
         // Check if the function name is in the list of predefined functions
-        return LE.predefinedFunctions.ContainsKey(token.Value)
+        ListExtrasScoper listExtrasScoper = new();
+        return listExtrasScoper.predefinedFunctions.ContainsKey(token.Value)
             ? new FunctionPredefinedNode(token.Value, args)
             : FDN.Any(f => f.Name == token.Value)
                 ? (Node)new FunctionCallNode(token.Value, args)
@@ -125,10 +126,10 @@ public partial class Parser
 
     private Node ParseMultiLet(Token identifier, Node value)
     {
-        var scope = new Dictionary<string, Node>
+        var variableDeclarations = new List<ConstDeclarationNode>
         {
-            // Add the first expression to the scope
-            [identifier.Value] = value
+            // Add the first expression to the list
+            new(identifier.Value, value)
         };
 
         while (CurrentToken?.Type != TokenType.InKeyword)
@@ -138,8 +139,8 @@ public partial class Parser
             _ = ConsumeToken(TokenType.Operator); // consume the '=' operator
             var nextValue = ParseExpression();
 
-            // Add the expression to the scope
-            scope[nextIdentifier.Value] = nextValue;
+            // Add the expression to the list
+            variableDeclarations.Add(new ConstDeclarationNode(nextIdentifier.Value, nextValue));
 
             if (CurrentToken?.Type == TokenType.EOL)
             {
@@ -150,12 +151,8 @@ public partial class Parser
         _ = ConsumeToken(TokenType.InKeyword);
         var body = ParseExpression();
 
-        // Create the MultipleVariableDeclarationNode with the parsed scope and body
-        var multiLetNode = new MultipleVariableDeclarationNode(body);
-        foreach (var kvp in scope)
-        {
-            multiLetNode.Scope[kvp.Key] = kvp.Value;
-        }
+        // Create the MultipleVariableDeclarationNode with the parsed variable declarations and body
+        var multiLetNode = new MultipleVariableDeclarationNode(variableDeclarations, body);
 
         return multiLetNode;
     }

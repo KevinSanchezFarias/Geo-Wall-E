@@ -85,7 +85,7 @@ public partial class MainForm : Form
                     ShowMessage("\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/", false);
                 ShowMessage(Message, false);
             }
-            else if (graphics is LE.ToDraw graphic)
+            else if (graphics is ListExtrasScoper.ToDraw graphic)
             {
                 ShowMessage("\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/", false);
                 switch (graphic.figure)
@@ -158,7 +158,7 @@ public partial class MainForm : Form
     /// <param name="comment">The comment to be displayed.</param>
     /// <param name="canvas">The graphics canvas on which the arc will be drawn.</param>
     /// <exception cref="ArgumentException">Thrown when less than 3 points are provided.</exception>
-    private static void Draw_Arc(Brush brush, LE.ToDraw toDraw, Graphics canvas)
+    private static void Draw_Arc(Brush brush, ListExtrasScoper.ToDraw toDraw, Graphics canvas)
     {
         // Calculate the bounding rectangle for the arc
         var x = Math.Min(toDraw.points[0].X, Math.Min(toDraw.points[1].X, toDraw.points[2].X));

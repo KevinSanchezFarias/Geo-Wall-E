@@ -2,7 +2,7 @@ using Nodes;
 
 namespace Lists
 {
-    public static class LE
+    public class ListExtrasScoper
     {
         #region Draw
         /// <summary>
@@ -37,11 +37,11 @@ namespace Lists
             public string comment;
         }
         #endregion
-        private static Stack<Brush> color = new(new[] { Brushes.White });
-        public static readonly List<ToDraw> toDraws = new();
-        public static readonly Dictionary<string, PointF> poiND = new();
-        public static readonly List<DeclaredSequenceNode> Seqs = new();
-        public static readonly Dictionary<string, Func<double[], double>> predefinedFunctions = new()
+        private Stack<Brush> color = new(new[] { Brushes.White });
+        public readonly List<ToDraw> toDraws = new();
+        public readonly Dictionary<string, PointF> poiND = new();
+        public readonly List<DeclaredSequenceNode> Seqs = new();
+        public readonly Dictionary<string, Func<double[], double>> predefinedFunctions = new()
     {
         { "Sin", args => Math.Sin(args[0]) },
         { "Cos", args => Math.Cos(args[0]) },
@@ -66,8 +66,8 @@ namespace Lists
         { "Fact", args => Enumerable.Range(1, (int)args[0]).Aggregate(1, (p, item) => p * item) },
         { "Rand", args => new Random().Next((int)args[0], (int)args[1])}
     };
-        public static readonly List<ConstDeclarationNode> cDN = new();
-        public static readonly List<GlobalConstNode> DeclaredConst = new()
+        public readonly List<ConstDeclarationNode> cDN = new();
+        public readonly List<GlobalConstNode> DeclaredConst = new()
         {
         new("PI", new ValueNode(Math.PI)),
         new("E", new ValueNode(Math.E)),
@@ -82,6 +82,6 @@ namespace Lists
         new("GOLDENRATIO", new ValueNode(1.61803398874989484820458683436563811772030917980576)),
         new("AVOGADRO", new ValueNode(6.02214076e23)),
         };
-        public static Stack<Brush> Color { get => color; set => color = value; }
+        public Stack<Brush> Color { get => color; set => color = value; }
     }
 }

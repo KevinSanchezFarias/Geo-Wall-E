@@ -205,7 +205,7 @@ public partial class Parser
                 // The name coincides with a brush color
                 var brush = brushProperty.GetValue(null) as Brush;
                 // Use the brush...
-                LE.Color.Push(brush!);
+                //ListExtrasScoper.Color.Push(brush!);
             }
             else
             {
@@ -221,7 +221,7 @@ public partial class Parser
         get
         {
             _ = ConsumeToken(TokenType.RestoreKeyword);
-            if (LE.Color.Count > 1) { LE.Color.Pop(); }
+            //if (ListExtrasScoper.Color.Count > 1) { ListExtrasScoper.Color.Pop(); }
             return new EndNode();
         }
     }

@@ -21,25 +21,27 @@ public class Evaluator
     public Evaluator(List<Node> ast) => AST = ast;
     private Dictionary<string, object> variables = new();
     private readonly Stack<Dictionary<string, object>> scopes = new();
+    public ListExtrasScoper scope = new();
     /// <summary>
     /// Evaluates the abstract syntax tree (AST) and returns the result.
     /// </summary>
     /// <returns>The result of the evaluation.</returns>
-    public IEnumerable<object> Evaluate()
+    public IEnumerable<object> Evaluate(ListExtrasScoper Scope)
     {
         foreach (var node in AST)
         {
-            var visited = Visit(node);
+            var visited = Visit(node, Scope);
+            scope = Scope;
             switch (visited)
             {
                 case GlobalConstNode gcn:
-                    LE.DeclaredConst.Add(gcn);
+                    scope.DeclaredConst.Add(gcn);
                     break;
                 case DeclaredSequenceNode dsn:
-                    LE.Seqs.Add(dsn);
+                    scope.Seqs.Add(dsn);
                     break;
                 case Figure figure:
-                    LE.toDraws.Add((LE.ToDraw)FigureHandler(figure));
+                    scope.toDraws.Add((ListExtrasScoper.ToDraw)FigureHandler(figure));
                     break;
                 default:
                     yield return visited;
@@ -54,7 +56,7 @@ public class Evaluator
     /// <returns>A list of <see cref="ToDraw"/> objects representing the figures to be drawn.</returns>
     public object Draw(DrawNode drawNode)
     {
-        var xT = Visit(drawNode.Figures);
+        var xT = Visit(drawNode.Figures, scope);
         if (drawNode.decl)
         {
             // Handle the case where the circle is declared and drawn in the same statement
@@ -68,7 +70,7 @@ public class Evaluator
             }
             else
             {
-                var id = Visit((Node)xT);
+                var id = Visit((Node)xT, scope);
                 return FBuild((Figure)id);
             }
         }
@@ -92,8 +94,9 @@ public class Evaluator
     /// </summary>
     /// <param name="node">The node to visit.</param>
     /// <returns>The result of the evaluation.</returns>
-    private object Visit(Node node)
+    private object Visit(Node node, ListExtrasScoper Scope)
     {
+        scope = Scope;
         return node switch
         {
             EndNode => null!,
@@ -110,19 +113,19 @@ public class Evaluator
             IfExpressionNode ifExpressionNode => ConditionalHandler(ifExpressionNode),
             IdentifierNode identifierNode => IdentifierHandler(identifierNode),
             Figure figure => figure,
-            VariableDeclarationNode varDecl => VarHandler(varDecl),
+            VariableDeclarationNode varDecl => LetHandler(varDecl),
             SequenceNode sequenceNode => SequenceHandler(sequenceNode),
             DeclaredSequenceNode declaredSequenceNode => declaredSequenceNode,
-            MultipleVariableDeclarationNode multipleVarDecl => MultipleVarHandler(multipleVarDecl),
+            MultipleVariableDeclarationNode multipleVarDecl => MultiLet(multipleVarDecl),
             null => null!,
             _ => throw new Exception($"Unexpected node type {node.GetType()}"),
         };
         #region EvaluatorMethods
         object BinaryHandler(BinaryExpressionNode binaryExpressionNode)
         {
-            var left = Visit(binaryExpressionNode.Left);
+            var left = Visit(binaryExpressionNode.Left, scope);
             if (left is ValueNode vn) left = vn.Value;
-            var right = Visit(binaryExpressionNode.Right);
+            var right = Visit(binaryExpressionNode.Right, scope);
             if (right is ValueNode vn2) right = vn2.Value;
             if (binaryExpressionNode.Operator == "+" && left is string leftStr && right is string rightStr)
             {
@@ -163,38 +166,23 @@ public class Evaluator
         }
         object ConditionalHandler(IfExpressionNode ifExpressionNode)
         {
-            var condition = Visit(ifExpressionNode.Condition);
+            var condition = Visit(ifExpressionNode.Condition, scope);
             if (condition is bool conditionBool)
             {
-                return conditionBool ? Visit(ifExpressionNode.ThenBody) : Visit(ifExpressionNode.ElseBody);
+                return conditionBool ? Visit(ifExpressionNode.ThenBody, scope) : Visit(ifExpressionNode.ElseBody, scope);
             }
             else
             {
                 throw new Exception($"Invalid condition type {condition.GetType()}");
             }
         }
-        object MultipleVarHandler(MultipleVariableDeclarationNode multipleVarDecl)
-        {
-            scopes.Push(new Dictionary<string, object>()); // Enter a new scope
-
-            //foreach (var varDecl in multipleVarDecl.Body)
-            //{
-            //    //scopes.Peek()[varDecl.Identifier] = Visit(varDecl.Value);
-            //}
-
-            var result = Visit(multipleVarDecl.Body);
-
-            scopes.Pop(); // Leave the scope
-
-            return result;
-        }
-        object VarHandler(VariableDeclarationNode varDecl)
+        object LetHandler(VariableDeclarationNode varDecl)
         {
             scopes.Push(new Dictionary<string, object>()); // Enter a new scope
 
             //scopes.Peek()[varDecl.Identifier] = Visit(varDecl.Value);
 
-            var result = Visit(varDecl.Body);
+            var result = Visit(varDecl.Body, scope);
 
             scopes.Pop(); // Leave the scope
 
@@ -210,17 +198,17 @@ public class Evaluator
                     return value;
                 }
             }
-            if (LE.poiND.Any(p => p.Key == identifierNode.Identifier))
+            if (scope.poiND.Any(p => p.Key == identifierNode.Identifier))
             {
-                return LE.poiND.First(p => p.Key == identifierNode.Identifier).Value;
+                return scope.poiND.First(p => p.Key == identifierNode.Identifier).Value;
             }
-            else if (LE.DeclaredConst.Any(p => p.Identifier == identifierNode.Identifier))
+            else if (scope.DeclaredConst.Any(p => p.Identifier == identifierNode.Identifier))
             {
-                return LE.DeclaredConst.First(p => p.Identifier == identifierNode.Identifier).Value;
+                return scope.DeclaredConst.First(p => p.Identifier == identifierNode.Identifier).Value;
             }
-            else if (LE.Seqs.Any(p => p.Identifier == identifierNode.Identifier))
+            else if (scope.Seqs.Any(p => p.Identifier == identifierNode.Identifier))
             {
-                return LE.Seqs.First(p => p.Identifier == identifierNode.Identifier).Nodes;
+                return scope.Seqs.First(p => p.Identifier == identifierNode.Identifier).Nodes;
             }
             else
             {
@@ -229,9 +217,9 @@ public class Evaluator
         }
         object FunctionPredefinedHandler(FunctionPredefinedNode functionPredefinedNode)
         {
-            if (LE.predefinedFunctions.TryGetValue(functionPredefinedNode.Name, out var function))
+            if (scope.predefinedFunctions.TryGetValue(functionPredefinedNode.Name, out var function))
             {
-                var argValues = functionPredefinedNode.Args.Select(arg => (double)Visit(arg)).ToArray();
+                var argValues = functionPredefinedNode.Args.Select(arg => (double)Visit(arg, scope)).ToArray();
                 return function(argValues);
             }
             else
@@ -255,12 +243,12 @@ public class Evaluator
             for (int i = 0; i < functionDeclaration.Args.Count; i++)
             {
                 var argName = functionDeclaration.Args[i];
-                var argValue = Visit(functionCallNode.Args[i]);
+                var argValue = Visit(functionCallNode.Args[i], scope);
                 variables[argName] = argValue;
             }
 
             // Evaluate the function body
-            var result = Visit(functionDeclaration.Body);
+            var result = Visit(functionDeclaration.Body, scope);
 
             // Restore the old variables
             variables = oldVariables;
@@ -270,8 +258,8 @@ public class Evaluator
         object MeasureNodeHandler(MeasureNode measureNode)
         {
             // Evaluate the nodes and cast them to PointF
-            var point1 = (PointF)Visit(measureNode.P1);
-            var point2 = (PointF)Visit(measureNode.P2);
+            var point1 = (PointF)Visit(measureNode.P1, scope);
+            var point2 = (PointF)Visit(measureNode.P2, scope);
 
             // Calculate the distance between the points
             var dx = point2.X - point1.X;
@@ -284,16 +272,16 @@ public class Evaluator
         {
             if (globalConstNode.Value is PointNode pointNode)
             {
-                return new PointF(Convert.ToSingle(Visit(node: pointNode.X)), Convert.ToSingle(Visit(node: pointNode.Y)));
+                return new PointF(Convert.ToSingle(Visit(node: pointNode.X, scope)), Convert.ToSingle(Visit(node: pointNode.Y, scope)));
             }
-            var matchingNode = LE.DeclaredConst.FirstOrDefault(node => node.Identifier == globalConstNode.Identifier);
+            var matchingNode = scope.DeclaredConst.FirstOrDefault(node => node.Identifier == globalConstNode.Identifier);
             var x = matchingNode!.Value;
             return x;
         }
         object MultiAssignmentHandler(MultiAssignmentNode multiAssignmentNode)
         {
             // Evaluate the sequence
-            var evaluatedSequence = Visit(multiAssignmentNode.Sequence);
+            var evaluatedSequence = Visit(multiAssignmentNode.Sequence, scope);
             List<object> sequence;
 
             if (evaluatedSequence is DeclaredSequenceNode declaredSequence)
@@ -324,11 +312,11 @@ public class Evaluator
                     var value = sequence[i];
                     if (value is PointNode pointNode)
                     {
-                        LE.poiND.Add(identifier, new PointF(Convert.ToSingle(Visit(node: pointNode.X)), Convert.ToSingle(Visit(node: pointNode.Y))));
+                        scope.poiND.Add(identifier, new PointF(Convert.ToSingle(Visit(node: pointNode.X, scope)), Convert.ToSingle(Visit(node: pointNode.Y, scope))));
                     }
                     else
                     {
-                        LE.DeclaredConst.Add(new GlobalConstNode(identifier: identifier, value: Visit((Node)value)));
+                        scope.DeclaredConst.Add(new GlobalConstNode(identifier: identifier, value: Visit((Node)value, scope)));
                     }
                 }
             }
@@ -338,7 +326,7 @@ public class Evaluator
             {
                 var lastIdentifier = multiAssignmentNode.Identifiers.Last();
                 var remainingValues = sequence.Skip(multiAssignmentNode.Identifiers.Count - 1).ToList();
-                LE.Seqs.Add(new DeclaredSequenceNode(remainingValues, lastIdentifier));
+                scope.Seqs.Add(new DeclaredSequenceNode(remainingValues, lastIdentifier));
             }
 
             return null!;
@@ -351,7 +339,7 @@ public class Evaluator
             }
             else if (constDeclarationNode.Value is IntersectNode intersectNode)
             {
-                var x = Visit(intersectNode);
+                var x = Visit(intersectNode, scope);
                 if (x is List<PointNode> points)
                 {
                     if (points.Count > 1)
@@ -371,26 +359,59 @@ public class Evaluator
             }
             else
             {
-                return new GlobalConstNode(constDeclarationNode.Identifier, Visit(constDeclarationNode.Value));
+                return new GlobalConstNode(constDeclarationNode.Identifier, Visit(constDeclarationNode.Value, scope));
             }
             return null!;
         }
         #endregion
     }
 
+    private object MultiLet(MultipleVariableDeclarationNode multipleVarDecl)
+    {
+        // Create a new scope for the let expression
+        ListExtrasScoper letScope = new();
+
+        // Evaluate the constant declarations and add them to the new scope
+        foreach (var constDecl in multipleVarDecl.VariableDeclarations)
+        {
+            var value = Visit(constDecl, letScope);
+
+            // Check if the returned value is a DeclaredSequenceNode
+            if (value is DeclaredSequenceNode sequenceNode)
+            {
+                letScope.Seqs.Add(sequenceNode);
+            }
+            else if (value is GlobalConstNode gcn)
+            {
+                letScope.DeclaredConst.Add(gcn);
+            }
+            // Otherwise, it's a ConstDeclarationNode
+            else
+            {
+                letScope.DeclaredConst.Add(new GlobalConstNode(constDecl.Identifier, new ValueNode(value)));
+            }
+        }
+
+        // Evaluate the body of the let expression using the new scope
+        var result = Visit(multipleVarDecl.Body, letScope);
+
+        return result;
+    }
+
+    #region FigureHandlers
     private object PointNodeHandler(PointNode pointNode)
     {
         if (pointNode.X is null || pointNode.Y is null)
         {
-            LE.ToDraw toDraw = new()
+            ListExtrasScoper.ToDraw toDraw = new()
             {
                 name = pointNode.Name,
-                color = LE.Color.First(),
+                color = scope.Color.First(),
                 figure = "PointNode",
                 points = new PointF[] { new(new Random().Next(150, 300), new Random().Next(150, 300)) },
                 comment = null!
             };
-            LE.poiND.Add(pointNode.Name, toDraw.points[0]);
+            scope.poiND.Add(pointNode.Name, toDraw.points[0]);
             return toDraw;
         }
         else
@@ -402,10 +423,10 @@ public class Evaluator
     {
         if (circleNode.Center is null && circleNode.Radius is null)
         {
-            LE.ToDraw toDraw = new()
+            ListExtrasScoper.ToDraw toDraw = new()
             {
                 name = circleNode.name,
-                color = LE.Color.First(),
+                color = scope.Color.First(),
                 figure = "CircleNode",
                 points = new PointF[] { new(x: new Random().Next(150, 300), y: new Random().Next(150, 300)) },
                 rad = new Random().Next(0, 500),
@@ -424,24 +445,24 @@ public class Evaluator
     {
         if (lineNode.A is null && lineNode.B is null)
         {
-            LE.ToDraw toDraw = new()
+            ListExtrasScoper.ToDraw toDraw = new()
             {
                 name = lineNode.Name,
-                color = LE.Color.First(),
+                color = scope.Color.First(),
                 figure = "LineNode",
                 points = new PointF[]
                 {
-                    new(new Random().Next(150, 300), new Random().Next(150, 300)),
-                    new(new Random().Next(150, 300), new Random().Next(150, 300))
+                        new(new Random().Next(150, 300), new Random().Next(150, 300)),
+                        new(new Random().Next(150, 300), new Random().Next(150, 300))
                 },
                 comment = null!
             };
-            LE.toDraws.Add(toDraw);
+            scope.toDraws.Add(toDraw);
             return null!;
         }
         else
         {
-            LE.toDraws.Add(LineBuilder(lineNode));
+            scope.toDraws.Add(LineBuilder(lineNode));
             return null!;
         }
     }
@@ -449,24 +470,24 @@ public class Evaluator
     {
         if (segmentNode.A is null && segmentNode.B is null)
         {
-            LE.ToDraw toDraw = new()
+            ListExtrasScoper.ToDraw toDraw = new()
             {
                 name = segmentNode.Name,
-                color = LE.Color.First(),
+                color = scope.Color.First(),
                 figure = "SegmentNode",
                 points = new PointF[]
                 {
-                    new(new Random().Next(150, 300), new Random().Next(150, 300)),
-                    new(new Random().Next(150, 300), new Random().Next(150, 300))
+                        new(new Random().Next(150, 300), new Random().Next(150, 300)),
+                        new(new Random().Next(150, 300), new Random().Next(150, 300))
                 },
                 comment = null!
             };
-            LE.toDraws.Add(toDraw);
+            scope.toDraws.Add(toDraw);
             return null!;
         }
         else
         {
-            LE.toDraws.Add(SegBuilder(segmentNode));
+            scope.toDraws.Add(SegBuilder(segmentNode));
             return null!;
         }
     }
@@ -474,24 +495,24 @@ public class Evaluator
     {
         if (rayNode.P1 is null && rayNode.P2 is null)
         {
-            LE.ToDraw toDraw = new()
+            ListExtrasScoper.ToDraw toDraw = new()
             {
                 name = rayNode.Name,
-                color = LE.Color.First(),
+                color = scope.Color.First(),
                 figure = "RayNode",
                 points = new PointF[]
                 {
-                    new(new Random().Next(150, 300), new Random().Next(150, 300)),
-                    new(new Random().Next(150, 300), new Random().Next(150, 300))
+                        new(new Random().Next(150, 300), new Random().Next(150, 300)),
+                        new(new Random().Next(150, 300), new Random().Next(150, 300))
                 },
                 comment = null!
             };
-            LE.toDraws.Add(toDraw);
+            scope.toDraws.Add(toDraw);
             return null!;
         }
         else
         {
-            LE.toDraws.Add(RayBuilder(rayNode));
+            scope.toDraws.Add(RayBuilder(rayNode));
             return null!;
         }
     }
@@ -499,21 +520,21 @@ public class Evaluator
     {
         if (arcNode.Center is null && arcNode.P1 is null && arcNode.P2 is null && arcNode.Measure is null)
         {
-            LE.ToDraw toDraw = new()
+            ListExtrasScoper.ToDraw toDraw = new()
             {
                 name = arcNode.Name,
-                color = LE.Color.First(),
+                color = scope.Color.First(),
                 figure = "ArcNode",
                 points = new PointF[]
                 {
-                    new(new Random().Next(150, 300), new Random().Next(150, 300)),
-                    new(new Random().Next(150, 300), new Random().Next(150, 300)),
-                    new(new Random().Next(150, 300), new Random().Next(150, 300))
+                        new(new Random().Next(150, 300), new Random().Next(150, 300)),
+                        new(new Random().Next(150, 300), new Random().Next(150, 300)),
+                        new(new Random().Next(150, 300), new Random().Next(150, 300))
                 },
                 rad = new Random().Next(0, 500),
                 comment = null!
             };
-            LE.toDraws.Add(toDraw);
+            scope.toDraws.Add(toDraw);
             return null!;
         }
         else
@@ -535,24 +556,23 @@ public class Evaluator
             _ => throw new Exception($"Unexpected node type {figure.GetType()}"),
         };
     }
-
+    #endregion
     private object SequenceHandler(SequenceNode sequenceNode)
     {
         List<object> evaluatedNodes = new();
         foreach (var node in sequenceNode.Nodes)
         {
-            object result = Visit(node);
+            object result = Visit(node, scope);
             evaluatedNodes.Add(result);
         }
         DeclaredSequenceNode declaredSequenceNode = new(evaluatedNodes, sequenceNode.Identifier);
-        LE.Seqs.Add(declaredSequenceNode);
+        scope.Seqs.Add(declaredSequenceNode);
         return null!;
     }
-
     private List<PointNode> IntersectHandler(IntersectNode intersectNode)
     {
-        var figure1 = Visit(intersectNode.Figure1);
-        var figure2 = Visit(intersectNode.Figure2);
+        var figure1 = Visit(intersectNode.Figure1, scope);
+        var figure2 = Visit(intersectNode.Figure2, scope);
 
         List<PointNode> intersection = CalculateIntersection((Node)figure1, (Node)figure2);
 
@@ -566,10 +586,10 @@ public class Evaluator
 
         if (figure1 is CircleNode circle1 && figure2 is CircleNode circle2)
         {
-            PointF center1 = (PointF)Visit(circle1.Center);
-            PointF center2 = (PointF)Visit(circle2.Center);
-            double radius1 = (double)Visit(circle1.Radius);
-            double radius2 = (double)Visit(circle2.Radius);
+            PointF center1 = (PointF)Visit(circle1.Center, scope);
+            PointF center2 = (PointF)Visit(circle2.Center, scope);
+            double radius1 = (double)Visit(circle1.Radius, scope);
+            double radius2 = (double)Visit(circle2.Radius, scope);
 
             double dx = center2.X - center1.X;
             double dy = center2.Y - center1.Y;
@@ -606,107 +626,107 @@ public class Evaluator
     }
 
     #region FigBuilder
-    private LE.ToDraw ArcBuilder(ArcNode arcNode)
+    private ListExtrasScoper.ToDraw ArcBuilder(ArcNode arcNode)
     {
 
-        LE.ToDraw toDraw = new()
+        ListExtrasScoper.ToDraw toDraw = new()
         {
             name = arcNode.Name,
-            color = LE.Color.First(),
+            color = scope.Color.First(),
             figure = "ArcNode",
             points = new PointF[]
             {
-                    (PointF)Visit(node: arcNode.Center),
-                    (PointF)Visit(node: arcNode.P1),
-                    (PointF)Visit(node: arcNode.P2)
+                    (PointF)Visit(node: arcNode.Center, scope),
+                    (PointF)Visit(node: arcNode.P1, scope),
+                    (PointF)Visit(node: arcNode.P2, scope)
             },
-            rad = (double)Visit(node: arcNode.Measure),
-            comment = (string)Visit(arcNode.Comment)
+            rad = (double)Visit(node: arcNode.Measure, scope),
+            comment = (string)Visit(arcNode.Comment, scope)
         };
         return toDraw;
 
     }
-    private LE.ToDraw SegBuilder(SegmentNode segmentNode)
+    private ListExtrasScoper.ToDraw SegBuilder(SegmentNode segmentNode)
     {
 
-        LE.ToDraw toDraw = new()
+        ListExtrasScoper.ToDraw toDraw = new()
         {
             name = segmentNode.Name,
-            color = LE.Color.First(),
+            color = scope.Color.First(),
             figure = "SegmentNode",
             points = new PointF[]
             {
-                (PointF)Visit(node: segmentNode.A),
-                (PointF)Visit(node: segmentNode.B)
+                (PointF)Visit(node: segmentNode.A, scope),
+                (PointF)Visit(node: segmentNode.B, scope)
             },
             comment = null!
         };
         return toDraw;
 
     }
-    private LE.ToDraw RayBuilder(RayNode rayNode)
+    private ListExtrasScoper.ToDraw RayBuilder(RayNode rayNode)
     {
 
-        LE.ToDraw toDraw = new()
+        ListExtrasScoper.ToDraw toDraw = new()
         {
             name = rayNode.Name,
-            color = LE.Color.First(),
+            color = scope.Color.First(),
             figure = "RayNode",
             points = new PointF[]
             {
-                    (PointF)Visit(node: rayNode.P1),
-                    (PointF)Visit(node: rayNode.P2)
+                    (PointF)Visit(node: rayNode.P1, scope),
+                    (PointF)Visit(node: rayNode.P2, scope)
             },
-            comment = (string)Visit(rayNode.Comment)
+            comment = (string)Visit(rayNode.Comment, scope)
         };
         return toDraw;
 
     }
-    private LE.ToDraw LineBuilder(LineNode lineNode)
+    private ListExtrasScoper.ToDraw LineBuilder(LineNode lineNode)
     {
-        LE.ToDraw toDraw = new()
+        ListExtrasScoper.ToDraw toDraw = new()
         {
             name = lineNode.Name,
-            color = LE.Color.First(),
+            color = scope.Color.First(),
             figure = "LineNode",
             points = new PointF[]
             {
-                    (PointF)Visit(node: lineNode.A),
-                    (PointF)Visit(node: lineNode.B)
+                    (PointF)Visit(node: lineNode.A, scope),
+                    (PointF)Visit(node: lineNode.B, scope)
             },
-            comment = (string)Visit(lineNode.Comment)
+            comment = (string)Visit(lineNode.Comment, scope)
 
         };
         return toDraw;
     }
-    private LE.ToDraw CircleBuilder(CircleNode circleNode)
+    private ListExtrasScoper.ToDraw CircleBuilder(CircleNode circleNode)
     {
-        LE.ToDraw toDraw = new()
+        ListExtrasScoper.ToDraw toDraw = new()
         {
             name = circleNode.name,
-            color = LE.Color.First(),
+            color = scope.Color.First(),
             figure = "CircleNode",
-            points = new PointF[] { (PointF)Visit(node: circleNode.Center) },
-            rad = (double)Visit(node: circleNode.Radius),
-            comment = (string)Visit(circleNode.Comment)
+            points = new PointF[] { (PointF)Visit(node: circleNode.Center, scope) },
+            rad = (double)Visit(node: circleNode.Radius, scope),
+            comment = (string)Visit(circleNode.Comment, scope)
         };
 
         return toDraw;
     }
-    private LE.ToDraw PointBuilder(PointNode pointNode)
+    private ListExtrasScoper.ToDraw PointBuilder(PointNode pointNode)
     {
-        var x = (double)Visit(node: pointNode.X);
-        var y = (double)Visit(node: pointNode.Y);
+        var x = (double)Visit(node: pointNode.X, scope);
+        var y = (double)Visit(node: pointNode.Y, scope);
 
-        LE.ToDraw toDraw = new()
+        ListExtrasScoper.ToDraw toDraw = new()
         {
             name = pointNode.Name,
-            color = LE.Color.First(),
+            color = scope.Color.First(),
             figure = "PointNode",
             points = new PointF[] { new((float)x, (float)y) },
             comment = null!
         };
-        LE.poiND.Add(pointNode.Name, toDraw.points[0]);
+        scope.poiND.Add(pointNode.Name, toDraw.points[0]);
         return toDraw;
     }
     #endregion

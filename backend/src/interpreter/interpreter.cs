@@ -3,6 +3,7 @@ using ParserAnalize;
 using EvaluatorAnalize;
 using Lists;
 using WaLI.backend.src.semantic;
+using System.DirectoryServices.ActiveDirectory;
 
 namespace InterpreterAnalizer;
 public class Interpreter
@@ -14,22 +15,23 @@ public class Interpreter
     /// <returns>A list of objects to draw.</returns>
     public static IEnumerable<object> Interpret(string input)
     {
-        List<LE.ToDraw> toDraws = new();
-        CleanFigs();
+        ListExtrasScoper GlobalScope = new();
+        List<ListExtrasScoper.ToDraw> toDraws = new();
+        //CleanFigs();
         var lexer = new Lexer(input);
         var parser = new Parser(lexer.LexTokens);
         var ast = parser.Parse();
         /*var semanticAnalyzer = new SemanticAnalyzer();
            semanticAnalyzer.Analyze(ast); */
         var evaluator = new Evaluator(ast);
-        var lineResults = evaluator.Evaluate();
+        var lineResults = evaluator.Evaluate(GlobalScope);
         foreach (var lineResult in lineResults)
         {
-            if (lineResult is LE.ToDraw draw)
+            if (lineResult is ListExtrasScoper.ToDraw draw)
             {
                 yield return draw;
             }
-            else if (lineResult is List<LE.ToDraw> drawList)
+            else if (lineResult is List<ListExtrasScoper.ToDraw> drawList)
             {
                 toDraws.AddRange(drawList);
                 yield return toDraws;
@@ -46,5 +48,5 @@ public class Interpreter
 
     }
     /*Minified*/
-    private static void CleanFigs() { LE.toDraws.Clear(); LE.DeclaredConst.Clear(); LE.poiND.Clear(); LE.Seqs.Clear(); LE.Color.Clear(); LE.Color.Push(Brushes.White); }
+    //private static void CleanFigs() { ListExtrasScoper.toDraws.Clear(); ListExtrasScoper.DeclaredConst.Clear(); ListExtrasScoper.poiND.Clear(); ListExtrasScoper.Seqs.Clear(); ListExtrasScoper.Color.Clear(); ListExtrasScoper.Color.Push(Brushes.White); }
 }
