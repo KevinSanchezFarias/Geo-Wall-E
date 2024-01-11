@@ -254,6 +254,10 @@ public class Evaluator
             {
                 return scope.Seqs.First(p => p.Identifier == identifierNode.Identifier).Nodes;
             }
+            else if (scope.infiniteSequenceNodes.Any(p => p.Key == identifierNode.Identifier))
+            {
+                return scope.infiniteSequenceNodes.First(p => p.Key == identifierNode.Identifier).Value;
+            }
             else
             {
                 throw new Exception($"Undefined variable {identifierNode.Identifier}");
@@ -411,6 +415,8 @@ public class Evaluator
         var sequence = GenerateInfiniteSequence(startValue);
 
         // Return the sequence
+        scope.infiniteSequenceNodes.Add(infiniteSequenceNode.Name, sequence);
+        scope.Seqs.Add(new DeclaredSequenceNode(sequence.Take(100).ToList().Cast<object>().ToList(), infiniteSequenceNode.Name));
         return sequence;
     }
 
