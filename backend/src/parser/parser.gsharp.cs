@@ -132,7 +132,14 @@ public partial class Parser
         while (CurrentToken?.Type == TokenType.Comma)
         {
             _ = ConsumeToken(TokenType.Comma);
-            identifiers.Add(ConsumeToken(TokenType.Identifier).Value);
+            if (CurrentToken?.Type == TokenType.Identifier)
+            {
+                identifiers.Add(ConsumeToken(TokenType.Identifier).Value);
+            }
+            else
+            {
+                identifiers.Add(ConsumeToken(TokenType.Identifier).Value);
+            }
         }
         _ = ConsumeToken(TokenType.Operator);
         Node sequence = ParseExpression();

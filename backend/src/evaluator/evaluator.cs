@@ -333,6 +333,10 @@ public class Evaluator
             if (sequence.Count > multiAssignmentNode.Identifiers.Count)
             {
                 var lastIdentifier = multiAssignmentNode.Identifiers.Last();
+                if (lastIdentifier is "_")
+                {
+                    return null!;
+                }
                 var remainingValues = sequence.Skip(multiAssignmentNode.Identifiers.Count - 1).ToList();
                 scope.Seqs.Add(new DeclaredSequenceNode(remainingValues, lastIdentifier));
             }
@@ -434,7 +438,13 @@ public class Evaluator
     {
         // Find the function declaration
         var functionDeclaration = scope.Funcs.FirstOrDefault(f => f.Name == functionCallNode.Name) ?? throw new Exception($"Undefined function {functionCallNode.Name}");
+
+        // Create a new scope for the function call
         ListExtrasScoper functionScope = scope;
+
+        // Add the function declaration to the new scope
+        functionScope.Funcs.Add(functionDeclaration);
+
         // Check the number of arguments
         if (functionDeclaration.Args.Count != functionCallNode.Args.Count)
         {
@@ -446,19 +456,9 @@ public class Evaluator
         {
             IdentifierNode argName = (IdentifierNode)functionDeclaration.Args[i];
             var val = Visit(functionCallNode.Args[i], functionScope);
-            if (val is PointNode pointNode)
-            {
-                functionScope.poiND.Add(argName.Identifier, new PointF(Convert.ToSingle(Visit(node: pointNode.X, functionScope)), Convert.ToSingle(Visit(node: pointNode.Y, functionScope))));
-            }
-            else if (val is PointF pointF)
-            {
-                functionScope.poiND.Add(argName.Identifier, pointF);
-            }
-            else
-            {
-                functionScope.DeclaredConst.Add(new GlobalConstNode(argName.Identifier, val));
-            }
+            functionScope.DeclaredConst.Add(new GlobalConstNode(argName.Identifier, val));
         }
+
         // Evaluate the function body
         var result = Visit(functionDeclaration.Body, functionScope);
 
@@ -723,7 +723,218 @@ public class Evaluator
         }
         else if (figure1 is CircleNode circle && figure2 is LineNode line)
         {
-            // Calculate intersection of a circle and a line
+            PointF center = (PointF)Visit(circle.Center, scope);
+            double radius = (double)Visit(circle.Radius, scope);
+            PointF point1 = (PointF)Visit(line.A, scope);
+            PointF point2 = (PointF)Visit(line.B, scope);
+
+            double dx = point2.X - point1.X;
+            double dy = point2.Y - point1.Y;
+            double dr = Math.Sqrt(dx * dx + dy * dy);
+            double D = point1.X * point2.Y - point2.X * point1.Y;
+
+            double discriminant = radius * radius * dr * dr - D * D;
+
+            // Check if there's no solution
+            if (discriminant < 0)
+            {
+                // The circle and the line don't intersect
+                return intersectionPoints;
+            }
+
+            double intersectionX1 = (D * dy + Math.Sign(dy) * dx * Math.Sqrt(discriminant)) / (dr * dr);
+            double intersectionY1 = (-D * dx + Math.Abs(dy) * Math.Sqrt(discriminant)) / (dr * dr);
+            double intersectionX2 = (D * dy - Math.Sign(dy) * dx * Math.Sqrt(discriminant)) / (dr * dr);
+            double intersectionY2 = (-D * dx - Math.Abs(dy) * Math.Sqrt(discriminant)) / (dr * dr);
+
+            intersectionPoints.Add(new PointNode("Intersection1", new ValueNode(intersectionX1), new ValueNode(intersectionY1)));
+            intersectionPoints.Add(new PointNode("Intersection2", new ValueNode(intersectionX2), new ValueNode(intersectionY2)));
+        }
+        else if (figure1 is LineNode line1 && figure2 is LineNode line2)
+        {
+            PointF point1 = (PointF)Visit(line1.A, scope);
+            PointF point2 = (PointF)Visit(line1.B, scope);
+            PointF point3 = (PointF)Visit(line2.A, scope);
+            PointF point4 = (PointF)Visit(line2.B, scope);
+
+            double denominator = (point1.X - point2.X) * (point3.Y - point4.Y) - (point1.Y - point2.Y) * (point3.X - point4.X);
+
+            // Check if there's no solution
+            if (denominator == 0)
+            {
+                // The lines are parallel
+                return intersectionPoints;
+            }
+
+            double intersectionX = ((point1.X * point2.Y - point1.Y * point2.X) * (point3.X - point4.X) - (point1.X - point2.X) * (point3.X * point4.Y - point3.Y * point4.X)) / denominator;
+            double intersectionY = ((point1.X * point2.Y - point1.Y * point2.X) * (point3.Y - point4.Y) - (point1.Y - point2.Y) * (point3.X * point4.Y - point3.Y * point4.X)) / denominator;
+
+            intersectionPoints.Add(new PointNode("Intersection", new ValueNode(intersectionX), new ValueNode(intersectionY)));
+        }
+        else if (figure1 is CircleNode circleNode1 && figure2 is SegmentNode segmentNode)
+        {
+            PointF center = (PointF)Visit(circleNode1.Center, scope);
+            double radius = (double)Visit(circleNode1.Radius, scope);
+            PointF point1 = (PointF)Visit(segmentNode.A, scope);
+            PointF point2 = (PointF)Visit(segmentNode.B, scope);
+
+            double dx = point2.X - point1.X;
+            double dy = point2.Y - point1.Y;
+            double dr = Math.Sqrt(dx * dx + dy * dy);
+            double D = point1.X * point2.Y - point2.X * point1.Y;
+
+            double discriminant = radius * radius * dr * dr - D * D;
+
+            // Check if there's no solution
+            if (discriminant < 0)
+            {
+                // The circle and the line don't intersect
+                return intersectionPoints;
+            }
+
+            double intersectionX1 = (D * dy + Math.Sign(dy) * dx * Math.Sqrt(discriminant)) / (dr * dr);
+            double intersectionY1 = (-D * dx + Math.Abs(dy) * Math.Sqrt(discriminant)) / (dr * dr);
+            double intersectionX2 = (D * dy - Math.Sign(dy) * dx * Math.Sqrt(discriminant)) / (dr * dr);
+            double intersectionY2 = (-D * dx - Math.Abs(dy) * Math.Sqrt(discriminant)) / (dr * dr);
+
+            intersectionPoints.Add(new PointNode("Intersection1", new ValueNode(intersectionX1), new ValueNode(intersectionY1)));
+            intersectionPoints.Add(new PointNode("Intersection2", new ValueNode(intersectionX2), new ValueNode(intersectionY2)));
+        }
+        else if (figure1 is SegmentNode segmentNode1 && figure2 is SegmentNode segmentNode2)
+        {
+            PointF point1 = (PointF)Visit(segmentNode1.A, scope);
+            PointF point2 = (PointF)Visit(segmentNode1.B, scope);
+            PointF point3 = (PointF)Visit(segmentNode2.A, scope);
+            PointF point4 = (PointF)Visit(segmentNode2.B, scope);
+
+            double denominator = (point1.X - point2.X) * (point3.Y - point4.Y) - (point1.Y - point2.Y) * (point3.X - point4.X);
+
+            // Check if there's no solution
+            if (denominator == 0)
+            {
+                // The lines are parallel
+                return intersectionPoints;
+            }
+
+            double intersectionX = ((point1.X * point2.Y - point1.Y * point2.X) * (point3.X - point4.X) - (point1.X - point2.X) * (point3.X * point4.Y - point3.Y * point4.X)) / denominator;
+            double intersectionY = ((point1.X * point2.Y - point1.Y * point2.X) * (point3.Y - point4.Y) - (point1.Y - point2.Y) * (point3.X * point4.Y - point3.Y * point4.X)) / denominator;
+
+            intersectionPoints.Add(new PointNode("Intersection", new ValueNode(intersectionX), new ValueNode(intersectionY)));
+        }
+        else if (figure1 is CircleNode circleNode2 && figure2 is RayNode rayNode)
+        {
+            PointF center = (PointF)Visit(circleNode2.Center, scope);
+            double radius = (double)Visit(circleNode2.Radius, scope);
+            PointF point1 = (PointF)Visit(rayNode.P1, scope);
+            PointF point2 = (PointF)Visit(rayNode.P2, scope);
+
+            double dx = point2.X - point1.X;
+            double dy = point2.Y - point1.Y;
+            double dr = Math.Sqrt(dx * dx + dy * dy);
+            double D = point1.X * point2.Y - point2.X * point1.Y;
+
+            double discriminant = radius * radius * dr * dr - D * D;
+
+            // Check if there's no solution
+            if (discriminant < 0)
+            {
+                // The circle and the line don't intersect
+                return intersectionPoints;
+            }
+
+            double intersectionX1 = (D * dy + Math.Sign(dy) * dx * Math.Sqrt(discriminant)) / (dr * dr);
+            double intersectionY1 = (-D * dx + Math.Abs(dy) * Math.Sqrt(discriminant)) / (dr * dr);
+            double intersectionX2 = (D * dy - Math.Sign(dy) * dx * Math.Sqrt(discriminant)) / (dr * dr);
+            double intersectionY2 = (-D * dx - Math.Abs(dy) * Math.Sqrt(discriminant)) / (dr * dr);
+
+            intersectionPoints.Add(new PointNode("Intersection1", new ValueNode(intersectionX1), new ValueNode(intersectionY1)));
+            intersectionPoints.Add(new PointNode("Intersection2", new ValueNode(intersectionX2), new ValueNode(intersectionY2)));
+        }
+        else if (figure1 is RayNode rayNode1 && figure2 is RayNode rayNode2)
+        {
+            PointF point1 = (PointF)Visit(rayNode1.P1, scope);
+            PointF point2 = (PointF)Visit(rayNode1.P2, scope);
+            PointF point3 = (PointF)Visit(rayNode2.P1, scope);
+            PointF point4 = (PointF)Visit(rayNode2.P2, scope);
+
+            double denominator = (point1.X - point2.X) * (point3.Y - point4.Y) - (point1.Y - point2.Y) * (
+                point3.X - point4.X);
+
+            // Check if there's no solution
+            if (denominator == 0)
+            {
+                // The lines are parallel
+                return intersectionPoints;
+            }
+
+            double intersectionX = ((point1.X * point2.Y - point1.Y * point2.X) * (point3.X - point4.X) - (point1.X - point2.X) * (point3.X * point4.Y - point3.Y * point4.X)) / denominator;
+            double intersectionY = ((point1.X * point2.Y - point1.Y * point2.X) * (point3.Y - point4.Y) - (point1.Y - point2.Y) * (point3.X * point4.Y - point3.Y * point4.X)) / denominator;
+
+            intersectionPoints.Add(new PointNode("Intersection", new ValueNode(intersectionX), new ValueNode(intersectionY)));
+        }
+        else if (figure1 is CircleNode circleNode3 && figure2 is ArcNode arcNode)
+        {
+            PointF center = (PointF)Visit(circleNode3.Center, scope);
+            double radius = (double)Visit(circleNode3.Radius, scope);
+            PointF point1 = (PointF)Visit(arcNode.Center, scope);
+            PointF point2 = (PointF)Visit(arcNode.P1, scope);
+            PointF point3 = (PointF)Visit(arcNode.P2, scope);
+
+            double dx = point2.X - point1.X;
+            double dy = point2.Y - point1.Y;
+            double dr = Math.Sqrt(dx * dx + dy * dy);
+            double D = point1.X * point2.Y - point2.X * point1.Y;
+
+            double discriminant = radius * radius * dr * dr - D * D;
+
+            // Check if there's no solution
+            if (discriminant < 0)
+            {
+                // The circle and the line don't intersect
+                return intersectionPoints;
+            }
+
+            double intersectionX1 = (D * dy + Math.Sign(dy) * dx * Math.Sqrt(discriminant)) / (dr * dr);
+            double intersectionY1 = (-D * dx + Math.Abs(dy) * Math.Sqrt(discriminant)) / (dr * dr);
+            double intersectionX2 = (D * dy - Math.Sign(dy) * dx * Math.Sqrt(discriminant)) / (dr * dr);
+            double intersectionY2 = (-D * dx - Math.Abs(dy) * Math.Sqrt(discriminant)) / (dr * dr);
+
+            intersectionPoints.Add(new PointNode("Intersection1", new ValueNode(intersectionX1), new ValueNode(intersectionY1)));
+            intersectionPoints.Add(new PointNode("Intersection2", new ValueNode(intersectionX2), new ValueNode(intersectionY2)));
+        }
+        else if (figure1 is ArcNode arcNode1 && figure2 is ArcNode arcNode2)
+        {
+            //ArcNode here has center, p1, p2, measure
+            PointF point1 = (PointF)Visit(arcNode1.Center, scope);
+            PointF point2 = (PointF)Visit(arcNode1.P1, scope);
+            PointF point3 = (PointF)Visit(arcNode1.P2, scope);
+            double measure = (double)Visit(arcNode1.Measure, scope);
+            PointF point4 = (PointF)Visit(arcNode2.Center, scope);
+            PointF point5 = (PointF)Visit(arcNode2.P1, scope);
+            PointF point6 = (PointF)Visit(arcNode2.P2, scope);
+            double measure2 = (double)Visit(arcNode2.Measure, scope);
+
+            double dx = point2.X - point1.X;
+            double dy = point2.Y - point1.Y;
+            double dr = Math.Sqrt(dx * dx + dy * dy);
+            double D = point1.X * point2.Y - point2.X * point1.Y;
+
+            double discriminant = measure * measure * dr * dr - D * D;
+
+            // Check if there's no solution
+            if (discriminant < 0)
+            {
+                // The circle and the line don't intersect
+                return intersectionPoints;
+            }
+
+            double intersectionX1 = (D * dy + Math.Sign(dy) * dx * Math.Sqrt(discriminant)) / (dr * dr);
+            double intersectionY1 = (-D * dx + Math.Abs(dy) * Math.Sqrt(discriminant)) / (dr * dr);
+            double intersectionX2 = (D * dy - Math.Sign(dy) * dx * Math.Sqrt(discriminant)) / (dr * dr);
+            double intersectionY2 = (-D * dx - Math.Abs(dy) * Math.Sqrt(discriminant)) / (dr * dr);
+
+            intersectionPoints.Add(new PointNode("Intersection1", new ValueNode(intersectionX1), new ValueNode(intersectionY1)));
+            intersectionPoints.Add(new PointNode("Intersection2", new ValueNode(intersectionX2), new ValueNode(intersectionY2)));
         }
 
         return intersectionPoints;
