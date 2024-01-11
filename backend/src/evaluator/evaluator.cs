@@ -1,6 +1,7 @@
 using Nodes;
 using ParserAnalize;
 using Lists;
+using System.Reflection;
 
 namespace EvaluatorAnalize;
 
@@ -19,7 +20,6 @@ public class Evaluator
     /// </summary>
     /// <param name="ast">The abstract syntax tree representing the program.</param>
     public Evaluator(List<Node> ast) => AST = ast;
-    private Dictionary<string, object> variables = new();
     private readonly Stack<Dictionary<string, object>> scopes = new();
     public ListExtrasScoper scope = new();
     /// <summary>
@@ -60,24 +60,29 @@ public class Evaluator
     public object Draw(DrawNode drawNode)
     {
         var xT = Visit(drawNode.Figures, scope);
-        if (drawNode.decl)
+        if (xT is DeclaredSequenceNode declaredSequenceNode)
         {
-            // Handle the case where the circle is declared and drawn in the same statement
-            return FBuild((Figure)drawNode.Figures);
+            List<ListExtrasScoper.ToDraw> rt = new();
+            foreach (var item in declaredSequenceNode.Nodes)
+            {
+                rt.Add((ListExtrasScoper.ToDraw)ReturnToDraw(item));
+            }
+            return rt;
+            //throw new Exception("The sequence does not contain figures.");
+        }
+        else if (xT is List<object> st)
+        {
+            List<ListExtrasScoper.ToDraw> rt = new();
+            foreach (var item in st)
+            {
+                rt.Add((ListExtrasScoper.ToDraw)ReturnToDraw(item));
+            }
+            return rt;
         }
         else
         {
-            if (xT is GlobalConstNode gcn && gcn.Value is Figure fg)
-            {
-                return FBuild(fg);
-            }
-            else
-            {
-                var id = Visit((Node)xT, scope);
-                return FBuild((Figure)id);
-            }
+            return ReturnToDraw(xT);
         }
-
         object FBuild(Figure figure)
         {
             return figure switch
@@ -90,6 +95,38 @@ public class Evaluator
                 PointNode pointNode => PointBuilder(pointNode),
                 _ => throw new Exception($"Unexpected node type {figure.GetType()}"),
             };
+        }
+
+        object ReturnToDraw(object xT)
+        {
+            if (drawNode.decl)
+            {
+                // Handle the case where the circle is declared and drawn in the same statement
+                return FBuild((Figure)drawNode.Figures);
+            }
+            else
+            {
+                if (xT is GlobalConstNode gcn && gcn.Value is Figure fg)
+                {
+                    return FBuild(fg);
+                }
+                else if (xT is PointF pointF)
+                {
+                    return new ListExtrasScoper.ToDraw()
+                    {
+                        name = "Point",
+                        color = scope.Color.First(),
+                        figure = "PointNode",
+                        points = new PointF[] { pointF },
+                        comment = null!
+                    };
+                }
+                else
+                {
+                    var id = Visit((Node)xT, scope);
+                    return FBuild((Figure)id);
+                }
+            }
         }
     }
     /// <summary>
@@ -106,9 +143,10 @@ public class Evaluator
             ValueNode valueNode => valueNode.Value,
             MultiAssignmentNode multiAssignmentNode => MultiAssignmentHandler(multiAssignmentNode),
             ConstDeclarationNode constDeclarationNode => ConstDeclarationNodeHandler(constDeclarationNode),
-            GlobalConstNode globalConstNode => GlobalConstNodeHandler(globalConstNode),
             IntersectNode intersectNode => IntersectHandler(intersectNode),
             DrawNode drawNode => Draw(drawNode),
+            ColorNode colorNode => ColorHandler(colorNode),
+            RestoreNode restoreNode => scope.Color.Pop(),
             FunctionDeclarationNode functionDeclarationNode => FunctionDeclarehandler(functionDeclarationNode),
             FunctionCallNode functionCallNode => InvokeDeclaredFunctionsHandler(functionCallNode),
             FunctionPredefinedNode functionPredefinedNode => FunctionPredefinedHandler(functionPredefinedNode),
@@ -121,6 +159,8 @@ public class Evaluator
             SequenceNode sequenceNode => SequenceHandler(sequenceNode),
             DeclaredSequenceNode declaredSequenceNode => declaredSequenceNode,
             MultipleVariableDeclarationNode multipleVarDecl => MultiLet(multipleVarDecl),
+            InfiniteSequenceNode infiniteSequenceNode => InfiniteHandler(infiniteSequenceNode),
+            GlobalConstNode globalConstNode => GlobalConstNodeHandler(globalConstNode),
             null => null!,
             _ => throw new Exception($"Unexpected node type {node.GetType()}"),
         };
@@ -278,9 +318,13 @@ public class Evaluator
                     {
                         scope.poiND.Add(identifier, new PointF(Convert.ToSingle(Visit(node: pointNode.X, scope)), Convert.ToSingle(Visit(node: pointNode.Y, scope))));
                     }
+                    else if (value is double || value is string)
+                    {
+                        scope.DeclaredConst.Add(new GlobalConstNode(identifier, value));
+                    }
                     else
                     {
-                        scope.DeclaredConst.Add(new GlobalConstNode(identifier: identifier, value: Visit((Node)value, scope)));
+                        scope.DeclaredConst.Add(new GlobalConstNode(identifier: identifier, Visit((Node)value, scope)));
                     }
                 }
             }
@@ -329,6 +373,51 @@ public class Evaluator
         }
         #endregion
     }
+
+    private object ColorHandler(ColorNode colorNode)
+    {
+        // Push the brush color that coincides with the value
+
+        // Get the type of the Brushes class
+        var brushesType = typeof(Brushes);
+
+        // Get the property with the given name
+        var brushProperty = brushesType.GetProperty(colorNode.Value, BindingFlags.Public | BindingFlags.Static);
+
+        // Check if the property exists and is of the right type
+        if (brushProperty != null && brushProperty.PropertyType == typeof(Brush))
+        {
+            // The name coincides with a brush color
+            var brush = brushProperty.GetValue(null) as Brush;
+            scope.Color.Push(brush!);
+        }
+        else
+        {
+            throw new Exception($"Invalid color {colorNode.Value}");
+        }
+        return null!;
+    }
+
+    private object InfiniteHandler(InfiniteSequenceNode infiniteSequenceNode)
+    {
+        // Evaluate the StartValueNode to get the starting value
+        var startValue = (double)Visit(infiniteSequenceNode.StartValueNode, scope);
+
+        // Generate an infinite sequence starting from startValue
+        var sequence = GenerateInfiniteSequence(startValue);
+
+        // Return the sequence
+        return sequence;
+    }
+
+    private static IEnumerable<double> GenerateInfiniteSequence(double start)
+    {
+        while (true)
+        {
+            yield return start++;
+        }
+    }
+
     private object FunctionPredefinedHandler(FunctionPredefinedNode functionPredefinedNode)
     {
         if (scope.predefinedFunctions.TryGetValue(functionPredefinedNode.Name, out var function))
@@ -581,8 +670,8 @@ public class Evaluator
             evaluatedNodes.Add(result);
         }
         DeclaredSequenceNode declaredSequenceNode = new(evaluatedNodes, sequenceNode.Identifier);
-        scope.Seqs.Add(declaredSequenceNode);
-        return null!;
+        //scope.Seqs.Add(declaredSequenceNode);
+        return declaredSequenceNode;
     }
     private List<PointNode> IntersectHandler(IntersectNode intersectNode)
     {

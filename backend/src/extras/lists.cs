@@ -42,6 +42,7 @@ namespace Lists
         public readonly Dictionary<string, PointF> poiND = new();
         public readonly List<DeclaredSequenceNode> Seqs = new();
         public readonly List<FunctionDeclarationNode> Funcs = new();
+        public readonly List<object> infiniteSequenceNodes = new();
         public readonly Dictionary<string, Func<double[], double>> predefinedFunctions = new()
     {
         { "Sin", args => Math.Sin(args[0]) },

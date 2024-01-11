@@ -33,8 +33,11 @@ public class Interpreter
             }
             else if (lineResult is List<ListExtrasScoper.ToDraw> drawList)
             {
-                toDraws.AddRange(drawList);
-                yield return toDraws;
+                foreach (var item in drawList)
+                {
+                    yield return item;
+                }
+                //toDraws.AddRange(drawList);
             }
             else if (lineResult is not null)
             {

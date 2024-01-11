@@ -77,3 +77,18 @@ public class GlobalConstNode : Node
         Value = value;
     }
 }
+public class ColorNode : Node
+{
+    public string Value { get; }
+
+    public ColorNode(string value)
+    {
+        Value = value;
+    }
+}
+public class RestoreNode : Node
+{
+    public RestoreNode()
+    {
+    }
+}

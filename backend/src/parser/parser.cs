@@ -122,6 +122,7 @@ public partial class Parser
         {
             return (CurrentToken?.Type) switch
             {
+                TokenType.Identifier => ParseIdentifier,
                 TokenType.Figure => ParseFigure(),
                 TokenType.DrawKeyword => ParseDraw,
                 TokenType.MeasureKeyword => ParseMeasure,
@@ -132,9 +133,9 @@ public partial class Parser
                 TokenType.IfKeyword => ParseIfExpression,
                 TokenType.Number => ParseNumber,
                 TokenType.StringLiteral => ParseStringLiteral,
-                TokenType.Identifier => ParseIdentifier,
                 TokenType.ImportKeyword => ParseImport,
                 TokenType.IntersectKeyword => ParseIntersect,
+                TokenType.LBrace => ParseSequence(null!),
                 TokenType.EOL => ParseEol,
                 _ => throw new Exception($"Unexpected token {CurrentToken?.Type} at line {CurrentToken?.Line} and column {CurrentToken?.Column}"),
             };

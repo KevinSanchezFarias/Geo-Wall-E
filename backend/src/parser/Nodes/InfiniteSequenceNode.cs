@@ -1,14 +1,13 @@
-
 namespace Nodes;
 
 public class InfiniteSequenceNode : Node
 {
     public string Name { get; }
-    public IEnumerable<double> Sequence { get; }
+    public Node StartValueNode { get; }
 
-    public InfiniteSequenceNode(IEnumerable<double> sequence, string name)
+    public InfiniteSequenceNode(Node startValueNode, string name)
     {
-        Sequence = sequence;
+        StartValueNode = startValueNode;
         Name = name;
     }
 }

@@ -192,28 +192,7 @@ public partial class Parser
         {
             _ = ConsumeToken(TokenType.ColorKeyword);
             var name = ConsumeToken(TokenType.Identifier);
-
-            // Get the type of the Brushes class
-            var brushesType = typeof(Brushes);
-
-            // Get the property with the given name
-            var brushProperty = brushesType.GetProperty(name.Value, BindingFlags.Public | BindingFlags.Static);
-
-            // Check if the property exists and is of the right type
-            if (brushProperty != null && brushProperty.PropertyType == typeof(Brush))
-            {
-                // The name coincides with a brush color
-                var brush = brushProperty.GetValue(null) as Brush;
-                // Use the brush...
-                //ListExtrasScoper.Color.Push(brush!);
-            }
-            else
-            {
-                // The name doesn't coincide with a brush color
-                throw new Exception($"Undefined color {name.Value} at line {CurrentToken?.Line} and column {CurrentToken?.Column}");
-            }
-
-            return new EndNode();
+            return new ColorNode(name.Value);
         }
     }
     private Node ParseRestore
@@ -221,8 +200,7 @@ public partial class Parser
         get
         {
             _ = ConsumeToken(TokenType.RestoreKeyword);
-            //if (ListExtrasScoper.Color.Count > 1) { ListExtrasScoper.Color.Pop(); }
-            return new EndNode();
+            return new RestoreNode();
         }
     }
     private Node ParseDraw

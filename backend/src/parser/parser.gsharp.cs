@@ -249,7 +249,7 @@ public partial class Parser
 
         while (CurrentToken?.Type != TokenType.RBrace)
         {
-            Node valueNode;
+            Node valueNode = null!;
             if (CurrentToken?.Type == TokenType.IntersectKeyword)
             {
                 return null!;
@@ -260,20 +260,8 @@ public partial class Parser
                 _ = ConsumeToken(TokenType.DotDotDot);
                 if (CurrentToken?.Type == TokenType.RBrace)
                 {
-                    // If there's nothing after the "...", generate an infinite sequence of natural numbers
-                    // This shit down here is a fvcking monster
-                    // values.Add(new InfiniteSequenceNode(InfiniteSequence(1), name));
-                    Task.Run(() =>
-                    {
-                        // If there's nothing after the "...", generate an infinite sequence of natural numbers
-                        for (int i = 1; i < 2000000000; i++)
-                        {
-                            values.Add(new ValueNode(i));
-                        }
-                        //
-                        values.RemoveAt(0);
-                        MessageBox.Show($"THE SEQUENCE HAS MORE THAN 2 BILLIONS OF NUMBERS! at column {CurrentToken?.Column} btw");
-                    });
+                    _ = ConsumeToken(TokenType.RBrace);
+                    return new InfiniteSequenceNode(firstValue, name);
                 }
                 else
                 {
@@ -294,6 +282,7 @@ public partial class Parser
 
             // If this is the first value, store it for later comparison
             firstValue ??= valueNode;
+            if (firstValue.GetType() != valueNode.GetType()) { throw new Exception("Bad sequence items"); }
 
             values.Add(valueNode);
 
