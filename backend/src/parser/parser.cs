@@ -126,7 +126,6 @@ public partial class Parser
                 TokenType.Figure => ParseFigure(),
                 TokenType.DrawKeyword => ParseDraw,
                 TokenType.MeasureKeyword => ParseMeasure,
-                TokenType.FunctionKeyword => ParseFunctionDeclaration,
                 TokenType.ColorKeyword => ParseColor,
                 TokenType.RestoreKeyword => ParseRestore,
                 TokenType.LetKeyword => ParseVariableDeclaration,

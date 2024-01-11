@@ -7,6 +7,31 @@ using LexerAnalize;
 namespace ParserAnalize;
 public partial class Parser
 {
+    private readonly string[] predefinedFunctionIdentifiers =
+    {
+    "Sin",
+    "Cos",
+    "Tan",
+    "Sqrt",
+    "Pow",
+    "Abs",
+    "Floor",
+    "Ceiling",
+    "Round",
+    "Truncate",
+    "Log",
+    "Log10",
+    "Exp",
+    "Min",
+    "Max",
+    "Sum",
+    "Average",
+    "Median",
+    "Mode",
+    "Range",
+    "Fact",
+    "Rand"
+};
     #region Gsharp
     private Node ParseNumber
     {
@@ -26,7 +51,7 @@ public partial class Parser
             {
                 TokenType.Operator when CurrentToken?.Value == "=" => ParseDeclareSimpleVar(token),
                 TokenType.Comma when WhenToMultiAssign() => MultiAssignParse(token),
-                TokenType.LParen => FunctionCallParse(token),
+                TokenType.LParen => ParseFunctionCallParse(token),
                 _ => new IdentifierNode(token.Value)
             };
 
@@ -68,26 +93,38 @@ public partial class Parser
         return new ConstDeclarationNode(token.Value, expression);
     }
 
-    private Node FunctionCallParse(Token token)
+    private Node ParseFunctionCallParse(Token functionName)
     {
-        // Parse a function call
-        var args = new List<Node>();
         _ = ConsumeToken(TokenType.LParen);
+        var args = new List<Node>();
         while (CurrentToken?.Type != TokenType.RParen)
         {
             args.Add(ParseExpression());
             if (CurrentToken?.Type == TokenType.Comma) { _ = ConsumeToken(TokenType.Comma); }
         }
         _ = ConsumeToken(TokenType.RParen);
-        // Check if the function name is in the list of predefined functions
-        ListExtrasScoper listExtrasScoper = new();
-        return listExtrasScoper.predefinedFunctions.ContainsKey(token.Value)
-            ? new FunctionPredefinedNode(token.Value, args)
-            : FDN.Any(f => f.Name == token.Value)
-                ? (Node)new FunctionCallNode(token.Value, args)
-                : throw new Exception($"Undefined function {token.Value}");
-    }
 
+
+        // If the next token is a right parenthesis, it's a function call
+        if (CurrentToken?.Type == TokenType.Operator && CurrentToken?.Value == "=")
+        {
+            _ = ConsumeToken(TokenType.Operator);
+            var body = ParseExpression();
+            return new FunctionDeclarationNode(functionName.Value, args, body);
+        }
+        else
+        {
+            // Check if the function name matches a predefined function
+            if (predefinedFunctionIdentifiers.Contains(functionName.Value))
+            {
+                return new FunctionPredefinedNode(functionName.Value, args);
+            }
+            else
+            {
+                return new FunctionCallNode(functionName.Value, args);
+            }
+        }
+    }
     private Node MultiAssignParse(Token token)
     {
         // Parse multiple assignments
@@ -199,24 +236,6 @@ public partial class Parser
         {
             var token = ConsumeToken(TokenType.StringLiteral);
             return new ValueNode(token.Value);
-        }
-    }
-    private Node ParseFunctionDeclaration
-    {
-        get
-        {
-            _ = ConsumeToken(TokenType.FunctionKeyword);
-            var name = ConsumeToken(TokenType.FIdentifier);
-            var args = new List<string>();
-            while (CurrentToken?.Type != TokenType.Flinq)
-            {
-                var arg = ConsumeToken(TokenType.Parameter);
-                args.Add(arg.Value);
-            }
-            _ = ConsumeToken(TokenType.Flinq);
-            var body = ParseExpression();
-            FDN.Add(new FunctionDeclarationNode(name.Value, args, body));
-            return new EndNode();
         }
     }
     private Node ParseSequence(string name)

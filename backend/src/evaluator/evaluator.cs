@@ -106,6 +106,7 @@ public class Evaluator
             GlobalConstNode globalConstNode => GlobalConstNodeHandler(globalConstNode),
             IntersectNode intersectNode => IntersectHandler(intersectNode),
             DrawNode drawNode => Draw(drawNode),
+            FunctionDeclarationNode functionDeclarationNode => FunctionDeclarehandler(functionDeclarationNode),
             FunctionCallNode functionCallNode => InvokeDeclaredFunctionsHandler(functionCallNode),
             FunctionPredefinedNode functionPredefinedNode => FunctionPredefinedHandler(functionPredefinedNode),
             MeasureNode measureNode => MeasureNodeHandler(measureNode),
@@ -244,14 +245,9 @@ public class Evaluator
             {
                 var argName = functionDeclaration.Args[i];
                 var argValue = Visit(functionCallNode.Args[i], scope);
-                variables[argName] = argValue;
             }
-
             // Evaluate the function body
             var result = Visit(functionDeclaration.Body, scope);
-
-            // Restore the old variables
-            variables = oldVariables;
 
             return result;
         }
@@ -364,6 +360,11 @@ public class Evaluator
             return null!;
         }
         #endregion
+    }
+
+    private object FunctionDeclarehandler(FunctionDeclarationNode functionDeclarationNode)
+    {
+        throw new NotImplementedException();
     }
 
     private object MultiLet(MultipleVariableDeclarationNode multipleVarDecl)
