@@ -5,7 +5,6 @@ namespace ParserAnalize;
 public partial class Parser
 {
     private List<Token> Tokens { get; set; }
-    private static List<FunctionDeclarationNode> fDN = new();
     private int currentTokenIndex = 0;
     private Token? CurrentToken => currentTokenIndex < Tokens.Count ? Tokens[currentTokenIndex] : null;
 

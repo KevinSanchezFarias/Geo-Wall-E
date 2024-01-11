@@ -310,7 +310,6 @@ public partial class Parser
         // Return a new SequenceNode
         return new SequenceNode(values, name);
     }
-    public static List<FunctionDeclarationNode> FDN { get => fDN; set => fDN = value; }
     private Node ParseImport
     {
         get

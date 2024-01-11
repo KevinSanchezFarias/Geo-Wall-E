@@ -43,6 +43,9 @@ public class Evaluator
                 case Figure figure:
                     scope.toDraws.Add((ListExtrasScoper.ToDraw)FigureHandler(figure));
                     break;
+                case FunctionDeclarationNode functionDeclarationNode:
+                    scope.Funcs.Add(functionDeclarationNode);
+                    break;
                 default:
                     yield return visited;
                     break;
@@ -216,41 +219,6 @@ public class Evaluator
                 throw new Exception($"Undefined variable {identifierNode.Identifier}");
             }
         }
-        object FunctionPredefinedHandler(FunctionPredefinedNode functionPredefinedNode)
-        {
-            if (scope.predefinedFunctions.TryGetValue(functionPredefinedNode.Name, out var function))
-            {
-                var argValues = functionPredefinedNode.Args.Select(arg => (double)Visit(arg, scope)).ToArray();
-                return function(argValues);
-            }
-            else
-            {
-                throw new Exception($"Undefined function {functionPredefinedNode.Name}");
-            }
-        }
-        object InvokeDeclaredFunctionsHandler(FunctionCallNode functionCallNode)
-        {
-            // Find the function declaration
-            var functionDeclaration = Parser.FDN.FirstOrDefault(f => f.Name == functionCallNode.Name) ?? throw new Exception($"Undefined function {functionCallNode.Name}");
-
-            // Check the number of arguments
-            if (functionDeclaration.Args.Count != functionCallNode.Args.Count)
-            {
-                throw new Exception($"Incorrect number of arguments for function {functionCallNode.Name}");
-            }
-
-            // Bind the arguments to the parameters
-            var oldVariables = new Dictionary<string, object>(variables);
-            for (int i = 0; i < functionDeclaration.Args.Count; i++)
-            {
-                var argName = functionDeclaration.Args[i];
-                var argValue = Visit(functionCallNode.Args[i], scope);
-            }
-            // Evaluate the function body
-            var result = Visit(functionDeclaration.Body, scope);
-
-            return result;
-        }
         object MeasureNodeHandler(MeasureNode measureNode)
         {
             // Evaluate the nodes and cast them to PointF
@@ -361,16 +329,50 @@ public class Evaluator
         }
         #endregion
     }
+    private object FunctionPredefinedHandler(FunctionPredefinedNode functionPredefinedNode)
+    {
+        if (scope.predefinedFunctions.TryGetValue(functionPredefinedNode.Name, out var function))
+        {
+            var argValues = functionPredefinedNode.Args.Select(arg => (double)Visit(arg, scope)).ToArray();
+            return function(argValues);
+        }
+        else
+        {
+            throw new Exception($"Undefined function {functionPredefinedNode.Name}");
+        }
+    }
+    private object InvokeDeclaredFunctionsHandler(FunctionCallNode functionCallNode)
+    {
+        // Find the function declaration
+        var functionDeclaration = scope.Funcs.FirstOrDefault(f => f.Name == functionCallNode.Name) ?? throw new Exception($"Undefined function {functionCallNode.Name}");
+        ListExtrasScoper functionScope = new();
+        // Check the number of arguments
+        if (functionDeclaration.Args.Count != functionCallNode.Args.Count)
+        {
+            throw new Exception($"Incorrect number of arguments for function {functionCallNode.Name}");
+        }
 
+        // Bind the arguments to the parameters
+        for (int i = 0; i < functionDeclaration.Args.Count; i++)
+        {
+            IdentifierNode argName = (IdentifierNode)functionDeclaration.Args[i];
+            functionScope.DeclaredConst.Add(new GlobalConstNode(argName.Identifier, Visit(functionCallNode.Args[i], functionScope)));
+        }
+        // Evaluate the function body
+        var result = Visit(functionDeclaration.Body, functionScope);
+
+        return result;
+    }
     private object FunctionDeclarehandler(FunctionDeclarationNode functionDeclarationNode)
     {
-        throw new NotImplementedException();
+        return functionDeclarationNode;
     }
+
 
     private object MultiLet(MultipleVariableDeclarationNode multipleVarDecl)
     {
         // Create a new scope for the let expression
-        ListExtrasScoper letScope = new();
+        ListExtrasScoper letScope = scope;
 
         // Evaluate the constant declarations and add them to the new scope
         foreach (var constDecl in multipleVarDecl.VariableDeclarations)
