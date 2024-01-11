@@ -163,21 +163,23 @@ public partial class Parser
 
     private Node ParseMultiLet(Token identifier, Node value)
     {
-        var variableDeclarations = new List<ConstDeclarationNode>
+        var variableDeclarations = new List<Node>
         {
             // Add the first expression to the list
-            new(identifier.Value, value)
+            new ConstDeclarationNode(identifier.Value, value)
         };
 
         while (CurrentToken?.Type != TokenType.InKeyword)
         {
             // Parse the next expression
-            var nextIdentifier = ConsumeToken(TokenType.Identifier);
+            /* var nextIdentifier = ConsumeToken(TokenType.Identifier);
             _ = ConsumeToken(TokenType.Operator); // consume the '=' operator
             var nextValue = ParseExpression();
 
             // Add the expression to the list
-            variableDeclarations.Add(new ConstDeclarationNode(nextIdentifier.Value, nextValue));
+            variableDeclarations.Add(new ConstDeclarationNode(nextIdentifier.Value, nextValue)); */
+            var nextVariableDeclaration = ParseExpression();
+            variableDeclarations.Add(nextVariableDeclaration);
 
             if (CurrentToken?.Type == TokenType.EOL)
             {

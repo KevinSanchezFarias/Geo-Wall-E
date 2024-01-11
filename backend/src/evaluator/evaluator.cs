@@ -345,7 +345,7 @@ public class Evaluator
     {
         // Find the function declaration
         var functionDeclaration = scope.Funcs.FirstOrDefault(f => f.Name == functionCallNode.Name) ?? throw new Exception($"Undefined function {functionCallNode.Name}");
-        ListExtrasScoper functionScope = new();
+        ListExtrasScoper functionScope = scope;
         // Check the number of arguments
         if (functionDeclaration.Args.Count != functionCallNode.Args.Count)
         {
@@ -356,7 +356,19 @@ public class Evaluator
         for (int i = 0; i < functionDeclaration.Args.Count; i++)
         {
             IdentifierNode argName = (IdentifierNode)functionDeclaration.Args[i];
-            functionScope.DeclaredConst.Add(new GlobalConstNode(argName.Identifier, Visit(functionCallNode.Args[i], functionScope)));
+            var val = Visit(functionCallNode.Args[i], functionScope);
+            if (val is PointNode pointNode)
+            {
+                functionScope.poiND.Add(argName.Identifier, new PointF(Convert.ToSingle(Visit(node: pointNode.X, functionScope)), Convert.ToSingle(Visit(node: pointNode.Y, functionScope))));
+            }
+            else if (val is PointF pointF)
+            {
+                functionScope.poiND.Add(argName.Identifier, pointF);
+            }
+            else
+            {
+                functionScope.DeclaredConst.Add(new GlobalConstNode(argName.Identifier, val));
+            }
         }
         // Evaluate the function body
         var result = Visit(functionDeclaration.Body, functionScope);
@@ -389,9 +401,9 @@ public class Evaluator
                 letScope.DeclaredConst.Add(gcn);
             }
             // Otherwise, it's a ConstDeclarationNode
-            else
+            else if (value is ConstDeclarationNode constDeclarationNode)
             {
-                letScope.DeclaredConst.Add(new GlobalConstNode(constDecl.Identifier, new ValueNode(value)));
+                letScope.DeclaredConst.Add(new GlobalConstNode(constDeclarationNode.Identifier, new ValueNode(value)));
             }
         }
 
